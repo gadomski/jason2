@@ -15,6 +15,7 @@ class Project(object):
         data_directory = config.get("project", "data_directory")
         products = str_to_list(config.get("project", "products"))
         passes = str_to_list(config.get("project", "passes"))
+        email = config.get("project", "email")
         try:
             start_cycle = config.getint("project", "start_cycle")
         except ConfigParser.NoOptionError:
@@ -23,13 +24,15 @@ class Project(object):
             end_cycle = config.getint("project", "end_cycle")
         except ConfigParser.NoOptionError:
             end_cycle = LAST_CYCLE
-        return cls(data_directory, products, passes, start_cycle, end_cycle)
+        return cls(data_directory, products, passes, email,
+                   start_cycle, end_cycle)
 
-    def __init__(self, data_directory, products, passes,
+    def __init__(self, data_directory, products, passes, email,
                  start_cycle=FIRST_CYCLE, end_cycle=LAST_CYCLE):
         self.data_directory = data_directory
         self.products = products
         self.passes = passes
+        self.email = email
         self.start_cycle = start_cycle
         self.end_cycle = end_cycle
 
