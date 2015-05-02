@@ -23,7 +23,9 @@ def parse_args():
         config.add_section("project")
 
     parser = argparse.ArgumentParser(description="Download and analyze "
-                                     "Jason2 data")
+                                     "Jason2 data. Most command line arguments "
+                                     "can also be specified in a configuration "
+                                     "file (jason2.cfg or ~/.jason2.cfg).")
     parser.add_argument("-d", "--data-directory",
                         default=config.get("project", "data-directory"),
                         help="The root directory for raw jason2 data")
