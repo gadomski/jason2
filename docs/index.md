@@ -1,7 +1,7 @@
 # jason2
 
 **jason2** is a Python package for working with [jason2](http://www.nasa.gov/mission_pages/ostm/main/) altimetry data, including a command line tool for common use cases.
-For installation instructions and system requirements, see [the project README](https://github.com/gadomski/jason2).
+For installation instructions and system requirements, see [the project README](https://github.com/gadomski/jason2#readme).
 
 
 ## Structure
