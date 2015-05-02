@@ -11,12 +11,25 @@ def fetch(project, args):
     project.fetch(args.skip_unzipping)
 
 
+def list_products(project, args):
+    for name, product in products.iteritems():
+        namestr = "Name: " + name
+        print
+        print namestr
+        print "-" * len(namestr)
+        print " family = " + product.family
+        print "   type = " + product.type_
+        print "version = " + product.version
+        print " zipped = " + str(product.zipped)
+        print
+
+
 def parse_args():
     config = ConfigParser.ConfigParser(defaults={
         "data-directory": None,
         "email": None,
-        "products": [],
-        "passes": [],
+        "products": None,
+        "passes": None,
         "start-cycle": None,
         "end-cycle": None,
     })
@@ -56,6 +69,11 @@ def parse_args():
                               help="Do not unzip sgdr files")
     fetch_parser.set_defaults(func=fetch)
 
+    list_products_parser = subparsers.add_parser("list-products",
+                                                 help="List supported jason2 "
+                                                      "products")
+    list_products_parser.set_defaults(func=list_products)
+
     return parser.parse_args()
 
 
@@ -64,9 +82,15 @@ def main():
     project = Project()
     project.data_directory = args.data_directory
     project.email = args.email
-    project.products = [products[product_name] for product_name in
-                        str_to_list(args.products)]
-    project.passes = [int(pass_) for pass_ in str_to_list(args.passes)]
+    if args.products is None:
+        project.products = []
+    else:
+        project.products = [products[product_name] for product_name in
+                            str_to_list(args.products)]
+    if args.passes is None:
+        project.passes = []
+    else:
+        project.passes = [int(pass_) for pass_ in str_to_list(args.passes)]
     project.start_cycle = args.start_cycle
     project.end_cycle = args.end_cycle
     args.func(project, args)

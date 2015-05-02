@@ -11,7 +11,7 @@ class Product(object):
                  family=DEFAULT_FAMILY, version=DEFAULT_VERSION):
         self.name = name
         self.type_ = type_
-        self.extension = ".nc" if not zipped else ".zip"
+        self.zipped = zipped
         self.directory_name = name if directory_name is None else directory_name
         self.family = family
         self.version = version
@@ -21,7 +21,7 @@ class Product(object):
         pass_str = zfill3(pass_)
         return "JA2_{}P{}_2P{}P{}_{}_*{}".format(
             self.get_famliy_code(), self.get_type_code(), self.version,
-            cycle_str, pass_str, self.extension)
+            cycle_str, pass_str, self.get_extension())
 
     def get_type_code(self):
         if self.type_ == "native":
@@ -44,3 +44,6 @@ class Product(object):
         else:
             raise InvalidProductFamily(
                 "Unknown product family: {}".format(self.family))
+
+    def get_extension(self):
+        return ".zip" if self.zipped else ".nc"
