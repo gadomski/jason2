@@ -1,6 +1,7 @@
 import fnmatch
 import ftplib
 import os
+import sys
 
 from jason2.exceptions import ConnectionError
 from jason2.utils import mkdir_p
@@ -29,18 +30,24 @@ class FtpConnection(object):
     SERVER = "avisoftp.cnes.fr"
     ROOT_PATH = "/Niveau0/AVISO/pub/jason-2/"
 
-    def __init__(self, email):
+    def __init__(self, email, output=sys.stdout):
         self.email = email
         self.connection = None
+        self.output = output
 
     def __enter__(self):
+        self._inform("Opening FTP connection to {} as {}...".format(self.SERVER,
+                                                                    self.email))
         self.connection = ftplib.FTP(self.SERVER)
         self.connection.login("anonymous", self.email)
+        self._inform("done\n")
         return self
 
     def __exit__(self, type_, value, traceback):
+        self._inform("Closing FTP connection...")
         self.connection.close()
         self.connection = None
+        self._inform("done\n")
 
     def fetch(self, product, cycle, passes, data_directory):
         if self.connection is None:
@@ -56,5 +63,11 @@ class FtpConnection(object):
             outfile = os.path.join(data_directory, product, cycle_str,
                                    filename)
             mkdir_p(os.path.dirname(outfile))
+            self._inform("Downloading {}...".format(filename))
             self.connection.retrbinary("RETR {}".format(filename),
                                        open(outfile, "wb").write)
+            self._inform("done\n")
+
+    def _inform(self, message):
+        self.output.write(message)
+        self.output.flush()
