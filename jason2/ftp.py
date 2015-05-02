@@ -2,6 +2,7 @@ import fnmatch
 import ftplib
 import os
 import sys
+import zipfile
 
 from jason2.exceptions import ConnectionError
 from jason2.utils import mkdir_p
@@ -49,7 +50,8 @@ class FtpConnection(object):
         self.connection = None
         self._inform("done\n")
 
-    def fetch(self, product, cycle, passes, data_directory):
+    def fetch(self, product, cycle, passes, data_directory,
+              skip_unzipping=False):
         if self.connection is None:
             raise ConnectionError("Not connected to FTP server")
         cycle_str = "cycle_{}".format(zfill3(cycle))
@@ -67,6 +69,14 @@ class FtpConnection(object):
             self.connection.retrbinary("RETR {}".format(filename),
                                        open(outfile, "wb").write)
             self._inform("done\n")
+            if os.path.splitext(outfile)[1] == ".zip" and not skip_unzipping:
+                self._unzip(outfile)
+
+    def _unzip(self, outfile):
+        self._inform("Unzipping {}...".format(outfile))
+        with zipfile.ZipFile(outfile, "r") as zfile:
+            zfile.extractall(os.path.dirname(outfile))
+        self._inform("done\n")
 
     def _inform(self, message):
         self.output.write(message)

@@ -36,8 +36,9 @@ class Project(object):
         self.start_cycle = start_cycle
         self.end_cycle = end_cycle
 
-    def fetch(self):
+    def fetch(self, skip_unzipping=False):
         with FtpConnection(self.email) as ftp:
             for product in self.products:
                 for cycle in range(self.start_cycle, self.end_cycle + 1):
-                    ftp.fetch(product, cycle, self.passes, self.data_directory)
+                    ftp.fetch(product, cycle, self.passes, self.data_directory,
+                              skip_unzipping)
