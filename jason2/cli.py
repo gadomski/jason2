@@ -13,7 +13,7 @@ def fetch(project, args):
     sys.exit(0)
 
 
-def list_products(project, args):
+def list_products(*_):
     for name, product in products.iteritems():
         namestr = "Name: " + name
         print
