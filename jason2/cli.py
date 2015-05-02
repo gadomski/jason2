@@ -10,7 +10,7 @@ def fetch(project, args):
 def parse_args():
     parser = argparse.ArgumentParser(description="Work with Jason2 data")
 
-    parser.add_argument("--configfile", default="jason2.cfg",
+    parser.add_argument("--config", default="jason2.cfg",
                         help="Project configuration file")
 
     subparsers = parser.add_subparsers()
@@ -26,5 +26,5 @@ def parse_args():
 
 def main():
     args = parse_args()
-    project = Project.from_config(args.configfile)
+    project = Project.from_config(args.config)
     args.func(project, args)
