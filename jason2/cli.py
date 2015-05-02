@@ -9,7 +9,7 @@ from jason2.utils import str_to_list
 
 
 def fetch(project, args):
-    project.fetch(args.skip_unzipping)
+    project.fetch(args.skip_unzipping, args.overwrite)
     sys.exit(0)
 
 
@@ -92,6 +92,9 @@ def parse_args():
 
     fetch_parser = subparsers.add_parser("fetch",
                                          help="Fetch jason2 data via FTP")
+    fetch_parser.add_argument("--overwrite", action="store_true",
+                              help="Re-download files even if they already "
+                                   "exist in the data directory")
     fetch_parser.add_argument("--skip-unzipping", action="store_true",
                               help="Do not unzip sgdr files")
     fetch_parser.set_defaults(func=fetch)

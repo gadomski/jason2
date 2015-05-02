@@ -34,7 +34,7 @@ class FtpConnection(object):
         self._inform("done\n")
 
     def fetch(self, product, cycle, passes, data_directory,
-              skip_unzipping=False):
+              skip_unzipping=False, overwrite=False):
         self._assert_connected()
         cycle_str = "cycle_{}".format(zfill3(cycle))
         self.connection.cwd(os.path.join(self.ROOT_PATH, product.directory_name,
@@ -46,6 +46,11 @@ class FtpConnection(object):
             filename = filenames[0]
             outfile = os.path.join(data_directory, product.directory_name,
                                    cycle_str, filename)
+            if os.path.exists(outfile) and not overwrite:
+                self._inform(
+                    "{} already exists on filesystem, skipping.\n".format(
+                        filename))
+                continue
             mkdir_p(os.path.dirname(outfile))
             self._inform("Downloading {}...".format(filename))
             self.connection.retrbinary("RETR {}".format(filename),

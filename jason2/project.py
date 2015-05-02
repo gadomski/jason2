@@ -13,7 +13,7 @@ class Project(object):
         self.start_cycle = None
         self.end_cycle = None
 
-    def fetch(self, skip_unzipping=False):
+    def fetch(self, skip_unzipping=False, overwrite=False):
         if self.email is None:
             raise MissingEmail("No email provided for fetch")
         with FtpConnection(self.email) as ftp:
@@ -22,4 +22,5 @@ class Project(object):
                                                   self.end_cycle)
                 for cycle in cycle_range:
                     ftp.fetch(product, cycle, self.passes, self.data_directory,
-                              skip_unzipping)
+                              skip_unzipping=skip_unzipping,
+                              overwrite=overwrite)
