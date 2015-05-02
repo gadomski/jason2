@@ -79,4 +79,4 @@ There are many more subtools available, use `jason2 --help` to find out more.
 
 ## API
 
-No API documentation is available at this time, please read the source to get a sense of what is going on.
+No API documentation is available at this time, please read [the source](https://github.com/gadomski/jason2) to get a sense of what is going on.
