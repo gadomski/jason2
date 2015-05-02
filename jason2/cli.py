@@ -36,8 +36,9 @@ def show_config(project, args):
     print "        passes: " + ", ".join(str(pass_) for pass_ in
                                          project.passes)
     if project.start_cycle:
-        print "          start_cycle: " + str(project.start_cycle)
-        print "            end_cycle: " + str(project.end_cycle)
+        print "   start_cycle: " + str(project.start_cycle)
+    if project.end_cycle:
+        print "     end_cycle: " + str(project.end_cycle)
 
 
 def parse_args():
