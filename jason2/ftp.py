@@ -20,14 +20,23 @@ class FtpConnection(object):
         self.output = output
 
     def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        self.close()
+
+    def open(self):
         self._inform("Opening FTP connection to {} as {}...".format(self.SERVER,
                                                                     self.email))
         self.connection = ftplib.FTP(self.SERVER)
         self.connection.login("anonymous", self.email)
         self._inform("done\n")
-        return self
 
-    def __exit__(self, type_, value, traceback):
+    def is_open(self):
+        return self.connection is not None
+
+    def close(self):
         self._inform("Closing FTP connection...")
         self.connection.close()
         self.connection = None
