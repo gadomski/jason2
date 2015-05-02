@@ -24,6 +24,22 @@ def list_products(project, args):
         print
 
 
+def show_config(project, args):
+    print
+    print "Project configuration"
+    print "---------------------"
+    print "  config files: " + ", ".join(args.config_files)
+    print "data directory: " + project.data_directory
+    print "         email: " + project.email
+    print "      products: " + ", ".join(product.name for product in
+                                         project.products)
+    print "        passes: " + ", ".join(str(pass_) for pass_ in
+                                         project.passes)
+    if project.start_cycle:
+        print "          start_cycle: " + str(project.start_cycle)
+        print "            end_cycle: " + str(project.end_cycle)
+
+
 def parse_args():
     config = ConfigParser.ConfigParser(defaults={
         "data-directory": None,
@@ -33,7 +49,8 @@ def parse_args():
         "start-cycle": None,
         "end-cycle": None,
     })
-    config.read(["jason2.cfg", os.path.expanduser("~/.jason2.cfg")])
+    config_files = config.read([os.path.abspath("jason2.cfg"),
+                                os.path.expanduser("~/.jason2.cfg")])
     if not config.has_section("project"):
         config.add_section("project")
 
@@ -74,7 +91,14 @@ def parse_args():
                                                       "products")
     list_products_parser.set_defaults(func=list_products)
 
-    return parser.parse_args()
+    config_parser = subparsers.add_parser("config",
+                                          help="Display configuration "
+                                               "parameters")
+    config_parser.set_defaults(func=show_config)
+
+    args = parser.parse_args()
+    args.config_files = config_files
+    return args
 
 
 def main():
