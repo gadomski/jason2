@@ -9,17 +9,17 @@ def zfill3(integer):
     return str(integer).zfill(3)
 
 
-def jason2_glob(product, cycle, track):
+def jason2_glob(product, cycle, pass_):
     # FIXME this is way too dumb
     if product == "gdr_d":
         product_type = "N"
     elif product == "sgdr_d":
         product_type = "S"
     cycle_str = zfill3(cycle)
-    track_str = zfill3(track)
+    pass_str = zfill3(pass_)
     # FIXME also way too dumb
     extension = ".nc" if product == "gdr_d" else ".zip"
-    return "JA2_GP{}_2PdP{}_{}_*{}".format(product_type, cycle_str, track_str,
+    return "JA2_GP{}_2PdP{}_{}_*{}".format(product_type, cycle_str, pass_str,
                                            extension)
 
 
@@ -41,14 +41,14 @@ class FtpConnection(object):
         self.connection.close()
         self.connection = None
 
-    def fetch(self, product, cycle, tracks, data_directory):
+    def fetch(self, product, cycle, passes, data_directory):
         if self.connection is None:
             raise ConnectionError("Not connected to FTP server")
         cycle_str = zfill3(cycle)
         self.connection.cwd(os.path.join(self.ROOT_PATH, product,
                                          cycle_str))
-        for track in tracks:
-            glob = jason2_glob(product, cycle, track)
+        for pass_ in passes:
+            glob = jason2_glob(product, cycle, pass_)
             filenames = fnmatch.filter(self.connection.nlist(), glob)
             assert len(filenames) == 1
             filename = filenames[0]

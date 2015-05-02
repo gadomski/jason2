@@ -14,7 +14,7 @@ class Project(object):
         config.read(filename)
         data_directory = config.get("project", "data_directory")
         products = str_to_list(config.get("project", "products"))
-        tracks = str_to_list(config.get("project", "tracks"))
+        passes = str_to_list(config.get("project", "passes"))
         try:
             start_cycle = config.getint("project", "start_cycle")
         except ConfigParser.NoOptionError:
@@ -23,13 +23,13 @@ class Project(object):
             end_cycle = config.getint("project", "end_cycle")
         except ConfigParser.NoOptionError:
             end_cycle = LAST_CYCLE
-        return cls(data_directory, products, tracks, start_cycle, end_cycle)
+        return cls(data_directory, products, passes, start_cycle, end_cycle)
 
-    def __init__(self, data_directory, products, tracks,
+    def __init__(self, data_directory, products, passes,
                  start_cycle=FIRST_CYCLE, end_cycle=LAST_CYCLE):
         self.data_directory = data_directory
         self.products = products
-        self.tracks = tracks
+        self.passes = passes
         self.start_cycle = start_cycle
         self.end_cycle = end_cycle
 
@@ -37,4 +37,4 @@ class Project(object):
         with FtpConnection(self.email) as ftp:
             for product in self.products:
                 for cycle in range(self.start_cycle, self.end_cycle + 1):
-                    ftp.fetch(product, cycle, self.tracks, self.data_directory)
+                    ftp.fetch(product, cycle, self.passes, self.data_directory)
