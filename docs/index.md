@@ -1,59 +1,80 @@
 # jason2
 
-**jason2** is a python package for working with [jason2](http://www.nasa.gov/mission_pages/ostm/main/) altimetry data.
-It provides a python API and a command line tool.
+**jason2** is a Python package for working with [jason2](http://www.nasa.gov/mission_pages/ostm/main/) altimetry data, including a command line tool for common use cases.
+For installation instructions and system requirements, see [the project README](https://github.com/gadomski/jason2).
 
 
-## Installation
+## Structure
 
-**jason2** depends on [hdf5](http://www.hdfgroup.org/HDF5) and [netcdf](http://www.unidata.ucar.edu/software/netcdf).
-If you are on OSX, install both with [homebrew](http://brew.sh):
+**jason2** organizes your work into a `Project`.
+A `Project` has many attributes, including:
 
-```bash
-brew install hdf5 netcdf
-```
+- a `data_directory`, which will hold all the raw jason-2 data files fetched from the remote server
+- a list of `products`, which are specific product types (e.g. gdr, sgdr) that your project is interested in
+- a list of `passes`, which are jason-2 passes (a.k.a. tracks) that your project is interested
+- and more...
 
-Then install **jason2** with pip:
-
-```bash
-pip install git+https://github.com/gadomski/jason2.git@master
-```
+You can see the complete list of project parameters by running `jason2 --help` and looking at the available command line options.
+Some of these parameters must be set by you, and others will be filled with sensible defaults.
 
 
-## Command Line
+## Configuration Files
 
-The **jason2** python package provides a command line tool, called `jason2`, for working with jason-2 data.
+While you could provide project parameters explicitly to each invocation of the command line tool, this quickly gets cumbersome.
+To make things easier, project parameters can be stored in configuration files.
+**jason2** looks for configuration files in two places:
 
-### Configuration File
+- a file named `jason2.cfg` in the current working directory
+- a file named `~/.jason2.cfg`
 
-Before using the command line tool you need to set up a jason2 project configuration file.
-This file will tell **jason2** which data products, passes, and cycles you are interested in.
-By default, **jason2** expects this file to be named `jason2.cfg` in your current working directory; you can specify another path using the `--config` command line option.
+This allows you to specify common options (e.g. your email address for FTP fetching) in the user-wide `~/.jason2.cfg`, while specifying options specific to a given project (e.g. pass numbers) in a directory-specific file.
 
-```cfg
+A configuration file looks like this:
+
+```text
 [project]
-data_directory: jason2-data
-products: gdr_d, sgdr_d
-passes: 195
+data-directory: build
 email: me@example.com
+products: gdr, sgdr
+passes: 195, 197
+end-cycle: 3
 ```
 
-Use the following keys to configure your jason-2 project:
+All options need to go in a `[project]` section.
+Lists are specified in a comma-delimited fashion.
+Omitted values (e.g. `start-cycle` in the example) are filled with sensible defaults.
 
-- `data_directory`: Top-level path for all downloaded jason-2 data products. If this directory does not exist, `jason2` will create it for you.
-- `products`: Comma-separated list of jason-2 data products to download. Use `jason2 list-products` to see a list of all supported products.
-- `passes`: Comma-separated list of all passes to download. Other software sometimes uses "tracks" instead of "passes".
-- `start_cycle`: Integer indicating the first cycle to download. If not provided, cycle downloads will start at zero.
-- `end_cycle`: Integer indicating the last cycle to download. If not provided, all cycles up to the most recent will be downloaded.
-- `email`: An email address that will be provided to the FTP server for download tracking.
+Project parameters provided on the command line will override the values in the configuration files.
 
 
-### Commands
+## Command Line Usage
 
-Below is a summary of some of the commands available via the command line tool.
-For a complete list and information on command line options, use `jason2 --help` or `jason2 [subcommand] --help`.
+Like many tools, `jason2` is organized into subtools; each subtool takes a specific action or actions, or provides certain output.
+To see the top-level `jason2` help, including the list of subtools, run:
 
-* `jason2 fetch` - Download jason2 data via FTP
+```bash
+jason2 --help
+```
+
+For help on a specific subtool, run:
+
+```bash
+jason2 [subtool name] --help
+```
+
+e.g. for help with the `fetch` subtool:
+
+```bash
+jason2 fetch --help
+```
+
+To print some information about your current project configuration to stdout, run:
+
+```bash
+jason2 config
+```
+
+There are many more subtools available, use `jason2 --help` to find out more.
 
 
 ## API
