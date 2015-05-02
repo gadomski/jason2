@@ -18,7 +18,7 @@ class Project(object):
             raise MissingEmail("No email provided for fetch")
         with FtpConnection(self.email) as ftp:
             for product in self.products:
-                cycle_range = ftp.get_cycle_range(self.start_cycle,
+                cycle_range = ftp.get_cycle_range(product, self.start_cycle,
                                                   self.end_cycle)
                 for cycle in cycle_range:
                     ftp.fetch(product, cycle, self.passes, self.data_directory,

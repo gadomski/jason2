@@ -20,7 +20,7 @@ class Product(object):
         cycle_str = zfill3(cycle)
         pass_str = zfill3(pass_)
         return "JA2_{}P{}_2P{}P{}_{}_*{}".format(
-            self.get_famliy_code(), self.get_type_code(), self.version,
+            self.get_family_code(), self.get_type_code(), self.version,
             cycle_str, pass_str, self.get_extension())
 
     def get_type_code(self):

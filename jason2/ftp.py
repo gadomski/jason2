@@ -1,11 +1,12 @@
 import fnmatch
 import ftplib
 import os
+import re
 import sys
 import zipfile
 
 from jason2.exceptions import ConnectionError
-from jason2.utils import mkdir_p
+from jason2.utils import mkdir_p, zfill3
 
 
 class FtpConnection(object):
@@ -34,18 +35,17 @@ class FtpConnection(object):
 
     def fetch(self, product, cycle, passes, data_directory,
               skip_unzipping=False):
-        if self.connection is None:
-            raise ConnectionError("Not connected to FTP server")
+        self._assert_connected()
         cycle_str = "cycle_{}".format(zfill3(cycle))
-        self.connection.cwd(os.path.join(self.ROOT_PATH, product,
+        self.connection.cwd(os.path.join(self.ROOT_PATH, product.directory_name,
                                          cycle_str))
         for pass_ in passes:
-            glob = jason2_glob(product, cycle, pass_)
-            filenames = fnmatch.filter(self.connection.nlst(), glob)
+            filenames = fnmatch.filter(self.connection.nlst(),
+                                       product.get_glob(cycle, pass_))
             assert len(filenames) == 1
             filename = filenames[0]
-            outfile = os.path.join(data_directory, product, cycle_str,
-                                   filename)
+            outfile = os.path.join(data_directory, product.directory_name,
+                                   cycle_str, filename)
             mkdir_p(os.path.dirname(outfile))
             self._inform("Downloading {}...".format(filename))
             self.connection.retrbinary("RETR {}".format(filename),
@@ -53,6 +53,27 @@ class FtpConnection(object):
             self._inform("done\n")
             if os.path.splitext(outfile)[1] == ".zip" and not skip_unzipping:
                 self._unzip(outfile)
+
+    def get_cycle_range(self, product, start_cycle, end_cycle):
+        self._assert_connected()
+        cycle_directories = self.connection.nlst(
+            os.path.join(self.ROOT_PATH, product.directory_name))
+        cycles = []
+        for cycle_directory in cycle_directories:
+            match = re.match(r"cycle_(\d\d\d)", cycle_directory)
+            if not match:
+                continue
+            cycles.append(int(match.group(1)))
+        if start_cycle is None:
+            start_cycle = min(cycles)
+        if end_cycle is None:
+            end_cycle = min(cycles)
+        return [cycle for cycle in cycles if
+                start_cycle <= cycle <= end_cycle]
+
+    def _assert_connected(self):
+        if self.connection is None:
+            raise ConnectionError("Not connected to FTP server")
 
     def _unzip(self, outfile):
         self._inform("Unzipping {}...".format(outfile))
