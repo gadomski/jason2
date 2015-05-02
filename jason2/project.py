@@ -1,5 +1,6 @@
 import ConfigParser
 
+from jason2.ftp import FtpConnection
 from jason2.system import FIRST_CYCLE, LAST_CYCLE
 from jason2.utils import str_to_list
 
@@ -31,3 +32,9 @@ class Project(object):
         self.tracks = tracks
         self.start_cycle = start_cycle
         self.end_cycle = end_cycle
+
+    def fetch(self):
+        with FtpConnection(self.email) as ftp:
+            for product in self.products:
+                for cycle in range(self.start_cycle, self.end_cycle + 1):
+                    ftp.fetch(product, cycle, self.tracks, self.data_directory)
