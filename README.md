@@ -17,11 +17,9 @@ If you run OSX, both are available with [homebrew](http://brew.sh).
 brew install hdf5 netcdf
 ```
 
+## Documentation
 
-## Usage
-
-**jason2** provides a command-line script with the same name that contains a few subcommands.
-Run `jason2 --help` for information.
+Usage instructions are hosted at http://gadomski.github.io/jason2 and are available in the source tree at `docs/index.md`.
 
 
 ## License
