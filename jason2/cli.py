@@ -1,4 +1,5 @@
 import argparse
+import csv
 import ConfigParser
 import os
 import sys
@@ -11,6 +12,16 @@ from jason2.utils import str_to_list
 def fetch(project, args):
     project.fetch(args.skip_unzipping, args.overwrite)
     sys.exit(0)
+
+
+def ice_heights(project, args):
+    product = products[args.product]
+    [datetimes, heights] = \
+        project.get_ice_heights(product, args.min_latitude, args.max_latitude)
+    writer = csv.writer(sys.stdout)
+    writer.writerow(["Datetime", "Ice height"])
+    for datetime, height in zip(datetimes, heights):
+        writer.writerow([datetime, height])
 
 
 def list_products(*_):
@@ -98,6 +109,20 @@ def parse_args():
     fetch_parser.add_argument("--skip-unzipping", action="store_true",
                               help="Do not unzip sgdr files")
     fetch_parser.set_defaults(func=fetch)
+
+    ice_heights_parser = subparsers.add_parser("ice-heights",
+                                              help="Calculate the ice height "
+                                              "timeseries between two "
+                                              "latitudes")
+    ice_heights_parser.add_argument("--min-latitude", type=float,
+                                   default=config.get("project", "min-latitude"),
+                                   help="Minimum latitude in decimal degrees")
+    ice_heights_parser.add_argument("--max-latitude", type=float,
+                                   default=config.get("project", "max-latitude"),
+                                   help="Maximum latitude in decimal degrees")
+    ice_heights_parser.add_argument("product",
+                                   help="Name of the product to use for heights")
+    ice_heights_parser.set_defaults(func=ice_heights)
 
     list_products_parser = subparsers.add_parser("list-products",
                                                  help="List supported jason2 "
