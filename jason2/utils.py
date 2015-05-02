@@ -14,3 +14,7 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+
+def zfill3(integer):
+    return str(integer).zfill(3)

@@ -8,24 +8,6 @@ from jason2.exceptions import ConnectionError
 from jason2.utils import mkdir_p
 
 
-def zfill3(integer):
-    return str(integer).zfill(3)
-
-
-def jason2_glob(product, cycle, pass_):
-    # FIXME this is way too dumb
-    if product == "gdr_d":
-        product_type = "N"
-    elif product == "sgdr_d":
-        product_type = "S"
-    cycle_str = zfill3(cycle)
-    pass_str = zfill3(pass_)
-    # FIXME also way too dumb
-    extension = ".nc" if product == "gdr_d" else ".zip"
-    return "JA2_GP{}_2PdP{}_{}_*{}".format(product_type, cycle_str, pass_str,
-                                           extension)
-
-
 class FtpConnection(object):
 
     SERVER = "avisoftp.cnes.fr"

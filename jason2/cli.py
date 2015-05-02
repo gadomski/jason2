@@ -2,7 +2,9 @@ import argparse
 import ConfigParser
 import os
 
+from jason2 import products
 from jason2.project import Project
+from jason2.utils import str_to_list
 
 
 def fetch(project, args):
@@ -39,10 +41,10 @@ def parse_args():
     parser.add_argument("-t", "--passes",
                         default=config.get("project", "passes"),
                         help="A comma-delimted list of pass numbers")
-    parser.add_argument("--start-cycle",
+    parser.add_argument("--start-cycle", type=int,
                         default=config.get("project", "start-cycle"),
                         help="The first cycle to download")
-    parser.add_argument("--end-cycle",
+    parser.add_argument("--end-cycle", type=int,
                         default=config.get("project", "end-cycle"),
                         help="The last cycle to download")
 
@@ -59,5 +61,12 @@ def parse_args():
 
 def main():
     args = parse_args()
-    project = Project.from_config(args.config)
+    project = Project()
+    project.data_directory = args.data_directory
+    project.email = args.email
+    project.products = [products[product_name] for product_name in
+                        str_to_list(args.products)]
+    project.passes = [int(pass_) for pass_ in str_to_list(args.passes)]
+    project.start_cycle = args.start_cycle
+    project.end_cycle = args.end_cycle
     args.func(project, args)
