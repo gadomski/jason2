@@ -1,6 +1,7 @@
 import argparse
 import ConfigParser
 import os
+import sys
 
 from jason2 import products
 from jason2.project import Project
@@ -9,6 +10,7 @@ from jason2.utils import str_to_list
 
 def fetch(project, args):
     project.fetch(args.skip_unzipping)
+    sys.exit(0)
 
 
 def list_products(project, args):
@@ -22,9 +24,15 @@ def list_products(project, args):
         print "version = " + product.version
         print " zipped = " + str(product.zipped)
         print
+    sys.exit(0)
 
 
 def show_config(project, args):
+    if project.data_directory is None:
+        print "Invalid configuration detected, data directory is None."
+        print "Populate jason.cfg in the current working directory to " \
+              "set configuration parameters."
+        sys.exit(1)
     print
     print "Project configuration"
     print "---------------------"
@@ -36,9 +44,10 @@ def show_config(project, args):
     print "        passes: " + ", ".join(str(pass_) for pass_ in
                                          project.passes)
     if project.start_cycle:
-        print "   start_cycle: " + str(project.start_cycle)
+        print "   start cycle: " + str(project.start_cycle)
     if project.end_cycle:
-        print "     end_cycle: " + str(project.end_cycle)
+        print "     end cycle: " + str(project.end_cycle)
+    sys.exit(0)
 
 
 def parse_args():
