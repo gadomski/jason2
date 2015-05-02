@@ -1,6 +1,7 @@
 # jason2
 
-A python package for downloading and working with [jason2 altimitry data](http://www.nasa.gov/mission_pages/ostm/main/).
+A Python package for downloading and working with [jason2 altimitry data](http://www.nasa.gov/mission_pages/ostm/main/).
+**jason2** includes a command line tool for common use cases.
 
 
 ## Installation
@@ -17,9 +18,16 @@ If you run OSX, both are available with [homebrew](http://brew.sh).
 brew install hdf5 netcdf
 ```
 
+**jason2** was developed on OSX, so it should work out of the box on most \*nix's.
+Windows, your mileage my vary.
+
+**jason2** was developed on Python 2.7.9.
+
+
 ## Documentation
 
-Usage instructions are hosted at http://gadomski.github.io/jason2 and are available in the source tree at `docs/index.md`.
+Documentation is hosted at http://gadomski.github.io/jason2.
+The plain text docs are available in this source tree at `docs/index.md`.
 
 
 ## License
