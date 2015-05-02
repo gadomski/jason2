@@ -1,3 +1,4 @@
+from jason2.exceptions import MissingEmail
 from jason2.ftp import FtpConnection
 
 
@@ -13,6 +14,8 @@ class Project(object):
         self.end_cycle = None
 
     def fetch(self, skip_unzipping=False):
+        if self.email is None:
+            raise MissingEmail("No email provided for fetch")
         with FtpConnection(self.email) as ftp:
             for product in self.products:
                 cycle_range = ftp.get_cycle_range(self.start_cycle,

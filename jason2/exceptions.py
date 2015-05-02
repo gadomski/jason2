@@ -12,3 +12,7 @@ class InvalidProductType(Jason2Error):
 
 class InvalidProductFamily(Jason2Error):
     pass
+
+
+class MissingEmail(Jason2Error):
+    pass
