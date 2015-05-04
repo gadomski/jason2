@@ -4,6 +4,9 @@ import ConfigParser
 import os
 import sys
 
+import matplotlib.pyplot as plt
+import numpy
+
 from jason2 import products
 from jason2.project import Project
 from jason2.utils import str_to_list
@@ -36,6 +39,18 @@ def list_products(*_):
         print " zipped = " + str(product.zipped)
         print
     sys.exit(0)
+
+
+def plot_waveforms(project, args):
+    waveforms = project.get_waveforms(args.cycle)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    (nrows, ncols) = waveforms.shape
+    x = numpy.arrange(nrows)
+    y = numpy.arrange(ncols)
+    X, Y = numpy.meshgrid(x, y)
+    ax.plot_surface(X, Y, waveforms)
+    plt.show()
 
 
 def show_config(project, args):
@@ -135,6 +150,13 @@ def parse_args():
                                           help="Display configuration "
                                                "parameters")
     config_parser.set_defaults(func=show_config)
+
+    plot_waveforms_parser = subparsers.add_parser("plot-waveforms",
+                                                  help="Plot sgdr waveforms.")
+    plot_waveforms_parser.add_argument("cycle", type=int,
+                                       help="The cycle to plot")
+    plot_waveforms_parser.set_defaults(func=plot_waveforms)
+
 
     args = parser.parse_args()
     args.config_files = config_files
