@@ -3,7 +3,8 @@ import os
 
 import netCDF4
 
-from jason2.exceptions import MissingEmail
+from jason2 import products
+from jason2.exceptions import MissingEmail, Jason2Error
 from jason2.ftp import FtpConnection
 from jason2.utils import get_cycle_range, zfill3
 
@@ -44,10 +45,20 @@ class Project(object):
     def get_filename(self, product, cycle, pass_):
         g = os.path.join(self.data_directory, product.directory_name,
                          "cycle_{}".format(zfill3(cycle)),
-                         product.get_glob(cycle, pass_))
+                         product.get_glob(cycle, pass_, unzipped_only=True))
         files = glob.glob(g)
         assert len(files) == 1
         return files[0]
+
+    def get_waveforms(self, cycle):
+        if products["sgdr"] not in self.products:
+            raise Jason2Error("Can get waveforms without sgdr product")
+        if len(self.passes) != 1:
+            raise Jason2Error("Can only get waveforms from a single pass")
+        pass_ = self.passes[0]
+        filename = self.get_filename(products["sgdr"], cycle, pass_)
+        dataset = netCDF4.Dataset(filename)
+        return dataset
 
     def dataset_iterator(self, product):
         return DatasetIterator(self, product)

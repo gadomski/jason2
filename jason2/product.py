@@ -16,12 +16,13 @@ class Product(object):
         self.family = family
         self.version = version
 
-    def get_glob(self, cycle, pass_):
+    def get_glob(self, cycle, pass_, unzipped_only=False):
         cycle_str = zfill3(cycle)
         pass_str = zfill3(pass_)
+        extension = ".nc" if unzipped_only else self.get_extension()
         return "JA2_{}P{}_2P{}P{}_{}_*{}".format(
             self.get_family_code(), self.get_type_code(), self.version,
-            cycle_str, pass_str, self.get_extension())
+            cycle_str, pass_str, extension)
 
     def get_type_code(self):
         if self.type_ == "native":
