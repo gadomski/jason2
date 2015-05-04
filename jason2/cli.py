@@ -69,6 +69,8 @@ def parse_args():
         "passes": None,
         "start-cycle": None,
         "end-cycle": None,
+        "min-latitude": None,
+        "max-latitude": None,
     })
     config_files = config.read([os.path.abspath("jason2.cfg"),
                                 os.path.expanduser("~/.jason2.cfg")])
