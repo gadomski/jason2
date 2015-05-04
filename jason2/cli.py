@@ -1,6 +1,5 @@
 import argparse
 import csv
-import os
 import sys
 
 import matplotlib.pyplot as plt
@@ -101,6 +100,12 @@ def parse_args():
     parser.add_argument("--end-cycle", type=int,
                         default=config.get("project", "end-cycle"),
                         help="The last cycle to download")
+    parser.add_argument("--min-latitude", type=float,
+                        default=config.get("project", "min-latitude"),
+                        help="Minimum latitude in decimal degrees")
+    parser.add_argument("--max-latitude", type=float,
+                        default=config.get("project", "max-latitude"),
+                        help="Maximum latitude in decimal degrees")
 
     subparsers = parser.add_subparsers()
 
@@ -114,17 +119,11 @@ def parse_args():
     fetch_parser.set_defaults(func=fetch)
 
     ice_heights_parser = subparsers.add_parser("ice-heights",
-                                              help="Calculate the ice height "
-                                              "timeseries between two "
-                                              "latitudes")
-    ice_heights_parser.add_argument("--min-latitude", type=float,
-                                   default=config.get("project", "min-latitude"),
-                                   help="Minimum latitude in decimal degrees")
-    ice_heights_parser.add_argument("--max-latitude", type=float,
-                                   default=config.get("project", "max-latitude"),
-                                   help="Maximum latitude in decimal degrees")
-    ice_heights_parser.add_argument("product",
-                                   help="Name of the product to use for heights")
+                                               help="Calculate the ice height "
+                                               "timeseries between two "
+                                               "latitudes")
+    ice_heights_parser.add_argument(
+        "product", help="Name of the product to use for heights")
     ice_heights_parser.set_defaults(func=ice_heights)
 
     list_products_parser = subparsers.add_parser("list-products",
@@ -142,7 +141,6 @@ def parse_args():
     plot_waveforms_parser.add_argument("cycle", type=int,
                                        help="The cycle to plot")
     plot_waveforms_parser.set_defaults(func=plot_waveforms)
-
 
     args = parser.parse_args()
     args.config_files = config_files
