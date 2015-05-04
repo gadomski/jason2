@@ -1,6 +1,5 @@
 import argparse
 import csv
-import ConfigParser
 import os
 import sys
 
@@ -77,20 +76,7 @@ def show_config(project, args):
 
 
 def parse_args():
-    config = ConfigParser.ConfigParser(defaults={
-        "data-directory": None,
-        "email": None,
-        "products": None,
-        "passes": None,
-        "start-cycle": None,
-        "end-cycle": None,
-        "min-latitude": None,
-        "max-latitude": None,
-    })
-    config_files = config.read([os.path.abspath("jason2.cfg"),
-                                os.path.expanduser("~/.jason2.cfg")])
-    if not config.has_section("project"):
-        config.add_section("project")
+    config, config_files = Project.read_config()
 
     parser = argparse.ArgumentParser(description="Download and analyze "
                                      "Jason2 data. Most command line arguments "

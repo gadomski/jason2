@@ -1,3 +1,4 @@
+import ConfigParser
 import glob
 import os
 
@@ -6,11 +7,42 @@ import netCDF4
 from jason2 import products
 from jason2.exceptions import MissingEmail, Jason2Error
 from jason2.ftp import FtpConnection
-from jason2.utils import get_cycle_range, zfill3
+from jason2.utils import get_cycle_range, zfill3, str_to_list
 
 
 class Project(object):
     """Holds project configuration parameters, such as data directory."""
+
+    @classmethod
+    def read_config(cls):
+        config = ConfigParser.ConfigParser(defaults={
+            "data-directory": None,
+            "email": None,
+            "products": [],
+            "passes": [],
+            "start-cycle": None,
+            "end-cycle": None,
+            "min-latitude": None,
+            "max-latitude": None,
+        })
+        config_files = config.read([os.path.abspath("jason2.cfg"),
+                                    os.path.expanduser("~/.jason2.cfg")])
+        if not config.has_section("project"):
+            config.add_section("project")
+        return config, config_files
+
+    @classmethod
+    def from_config(cls):
+        config, _ = cls.read_config()
+        project = cls()
+        project.data_directory = config.get("project", "data-directory")
+        project.email = config.get("project", "email")
+        project.products = [products[name] for name in
+                            str_to_list(config.get("project", "products"))]
+        project.passes = str_to_list(config.get("project", "passes"))
+        project.start_cycle = config.get("project", "start-cycle")
+        project.end_cycle = config.get("project", "end-cycle")
+        return project
 
     def __init__(self):
         self.data_directory = "."
