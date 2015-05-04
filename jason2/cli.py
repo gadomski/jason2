@@ -42,13 +42,12 @@ def list_products(*_):
 
 
 def plot_waveforms(project, args):
-    waveforms = project.get_waveforms(args.cycle)
+    waveforms, latitudes = project.get_waveforms(args.cycle)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     (nrows, ncols) = waveforms.shape
     x = numpy.arange(ncols)
-    y = numpy.arange(nrows)
-    X, Y = numpy.meshgrid(x, y)
+    X, Y = numpy.meshgrid(x, latitudes)
     ax.plot_surface(X, Y, waveforms, cmap=cm.coolwarm, rstride=1, cstride=1,
                     linewidth=0)
     plt.show()
@@ -109,6 +108,12 @@ def parse_args():
     parser.add_argument("--max-latitude", type=float,
                         default=config.get("project", "max-latitude"),
                         help="Maximum latitude in decimal degrees")
+    parser.add_argument("--min-longitude", type=float,
+                        default=config.get("project", "min-longitude"),
+                        help="Minimum longitude in decimal degrees")
+    parser.add_argument("--max-longitude", type=float,
+                        default=config.get("project", "max-longitude"),
+                        help="Maximum longitude in decimal degrees")
 
     subparsers = parser.add_subparsers()
 
@@ -168,4 +173,6 @@ def main():
     project.end_cycle = args.end_cycle
     project.min_latitude = args.min_latitude
     project.max_latitude = args.max_latitude
+    project.min_longitude = args.min_longitude
+    project.max_longitude = args.max_longitude
     args.func(project, args)

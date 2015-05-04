@@ -25,6 +25,8 @@ class Project(object):
             "end-cycle": None,
             "min-latitude": None,
             "max-latitude": None,
+            "min-longitude": None,
+            "max-longitude": None,
         })
         config_files = config.read([os.path.abspath("jason2.cfg"),
                                     os.path.expanduser("~/.jason2.cfg")])
@@ -45,6 +47,8 @@ class Project(object):
         project.end_cycle = config.get("project", "end-cycle")
         project.min_latitude = float(config.get("project", "min-latitude"))
         project.max_latitude = float(config.get("project", "max-latitude"))
+        project.min_latitude = float(config.get("project", "min-longitude"))
+        project.max_latitude = float(config.get("project", "max-longitude"))
         return project
 
     def __init__(self):
@@ -56,6 +60,8 @@ class Project(object):
         self.end_cycle = None
         self.min_latitude = None
         self.max_latitude = None
+        self.min_longitude = None
+        self.max_longitude = None
 
     def fetch(self, skip_unzipping=False, overwrite=False):
         if self.email is None:
@@ -99,12 +105,22 @@ class Project(object):
         waveforms = dataset.variables["waveforms_20hz_ku"][:]
         waveforms.shape = (waveforms.shape[0] * waveforms.shape[1],
                            waveforms.shape[2])
-        return waveforms[mask20hz, :]
+        return numpy.clip(waveforms[mask20hz, :], 0, 500), \
+            dataset.variables["lat_20hz"][:].flatten()[mask20hz]
 
     def get_20hz_mask(self, dataset):
-        return numpy.logical_and(
+        mask = numpy.logical_and(
             dataset.variables["lat_20hz"][:].flatten() >= self.min_latitude,
             dataset.variables["lat_20hz"][:].flatten() <= self.max_latitude)
+        if self.min_longitude is not None:
+            mask = numpy.logical_and(
+                mask,
+                dataset.variables["lon_20hz"][:].flatten() >= self.min_longitude)
+        if self.max_longitude is not None:
+            mask = numpy.logical_and(
+                mask,
+                dataset.variables["lon_20hz"][:].flatten() <= self.max_longitude)
+        return mask
 
     def dataset_iterator(self, product):
         return DatasetIterator(self, product)
