@@ -3,6 +3,8 @@ import csv
 import sys
 
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 import numpy
 
 from jason2 import products
@@ -44,10 +46,11 @@ def plot_waveforms(project, args):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     (nrows, ncols) = waveforms.shape
-    x = numpy.arrange(nrows)
-    y = numpy.arrange(ncols)
+    x = numpy.arange(ncols)
+    y = numpy.arange(nrows)
     X, Y = numpy.meshgrid(x, y)
-    ax.plot_surface(X, Y, waveforms)
+    ax.plot_surface(X, Y, waveforms, cmap=cm.coolwarm, rstride=1, cstride=1,
+                    linewidth=0)
     plt.show()
 
 
@@ -163,4 +166,6 @@ def main():
         project.passes = [int(pass_) for pass_ in str_to_list(args.passes)]
     project.start_cycle = args.start_cycle
     project.end_cycle = args.end_cycle
+    project.min_latitude = args.min_latitude
+    project.max_latitude = args.max_latitude
     args.func(project, args)

@@ -3,6 +3,7 @@ import glob
 import os
 
 import netCDF4
+import numpy
 
 from jason2 import products
 from jason2.exceptions import MissingEmail, Jason2Error
@@ -42,6 +43,8 @@ class Project(object):
         project.passes = str_to_list(config.get("project", "passes"))
         project.start_cycle = config.get("project", "start-cycle")
         project.end_cycle = config.get("project", "end-cycle")
+        project.min_latitude = float(config.get("project", "min-latitude"))
+        project.max_latitude = float(config.get("project", "max-latitude"))
         return project
 
     def __init__(self):
@@ -51,6 +54,8 @@ class Project(object):
         self.passes = []
         self.start_cycle = None
         self.end_cycle = None
+        self.min_latitude = None
+        self.max_latitude = None
 
     def fetch(self, skip_unzipping=False, overwrite=False):
         if self.email is None:
@@ -64,7 +69,7 @@ class Project(object):
                               skip_unzipping=skip_unzipping,
                               overwrite=overwrite)
 
-    def get_ice_heights(self, product, min_latitude, max_latitude):
+    def get_ice_heights(self, product):
         for dataset in self.dataset_iterator(product):
             pass
         return [1], [2]
@@ -90,7 +95,16 @@ class Project(object):
         pass_ = self.passes[0]
         filename = self.get_filename(products["sgdr"], cycle, pass_)
         dataset = netCDF4.Dataset(filename)
-        return dataset
+        mask20hz = self.get_20hz_mask(dataset)
+        waveforms = dataset.variables["waveforms_20hz_ku"][:]
+        waveforms.shape = (waveforms.shape[0] * waveforms.shape[1],
+                           waveforms.shape[2])
+        return waveforms[mask20hz, :]
+
+    def get_20hz_mask(self, dataset):
+        return numpy.logical_and(
+            dataset.variables["lat_20hz"][:].flatten() >= self.min_latitude,
+            dataset.variables["lat_20hz"][:].flatten() <= self.max_latitude)
 
     def dataset_iterator(self, product):
         return DatasetIterator(self, product)
