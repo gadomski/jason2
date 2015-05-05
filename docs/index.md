@@ -11,7 +11,7 @@ A `Project` has many attributes, including:
 
 - a `data_directory`, which will hold all the raw jason-2 data files fetched from the remote server
 - a list of `products`, which are specific product types (e.g. gdr, sgdr) that your project is interested in
-- a list of `passes`, which are jason-2 passes (a.k.a. tracks) that your project is interested
+- a list of `passes`, which are jason-2 passes (a.k.a. tracks) that your project is interested in
 - and more...
 
 
