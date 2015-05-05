@@ -36,11 +36,11 @@ class Project(object):
                 pass_ = self.get_pass_by_number(pass_number)
         else:
             pass_ = self.passes[0]
-        dataset = self.get_dataset(PRODUCTS["sgdr"], cycle, pass_)
+        dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
         return dataset.get_waveforms()
 
     def _get_dataset(self, product, cycle, pass_):
-        filename = self.get_filename(product, cycle, pass_)
+        filename = self._get_filename(product, cycle, pass_)
         return Dataset(filename, pass_.bounds)
 
     def _get_filename(self, product, cycle, pass_):
