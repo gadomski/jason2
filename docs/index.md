@@ -14,37 +14,33 @@ A `Project` has many attributes, including:
 - a list of `passes`, which are jason-2 passes (a.k.a. tracks) that your project is interested
 - and more...
 
-You can see the complete list of project parameters by running `jason2 --help` and looking at the available command line options.
-Some of these parameters must be set by you, and others will be filled with sensible defaults.
-
 
 ## Configuration Files
 
-While you could provide project parameters explicitly to each invocation of the command line tool, this quickly gets cumbersome.
-To make things easier, project parameters can be stored in configuration files.
-**jason2** looks for configuration files in two places:
-
-- a file named `jason2.cfg` in the current working directory
-- a file named `~/.jason2.cfg`
-
-This allows you to specify common options (e.g. your email address for FTP fetching) in the user-wide `~/.jason2.cfg`, while specifying options specific to a given project (e.g. pass numbers) in a directory-specific file.
+**jason2** looks for project configuration files in a file named `jason2.cfg` in your current working directory.
+You can specify another location for your configuration file with the `--config` command line option.
 
 A configuration file looks like this:
 
 ```text
 [project]
-data-directory: build
+data_directory: build
 email: me@example.com
 products: gdr, sgdr
-passes: 195, 197
-end-cycle: 3
+
+[pass-195]
+min_latitude = 32.98
+max_latitude = 33.23
+min_longitude = 244.23
+max_longitude = 244.63
+
+[pass-197]
+min_latitude = 32.98
+max_latitude = 33.23
 ```
 
-All options need to go in a `[project]` section.
-Lists are specified in a comma-delimited fashion.
-Omitted values (e.g. `start-cycle` in the example) are filled with sensible defaults.
-
-Project parameters provided on the command line will override the values in the configuration files.
+The list of products is specified in a comma-delimited fashion.
+All latitudes and longitudes are provided in decimal degrees, and the longitude values are optional.
 
 
 ## Command Line Usage
