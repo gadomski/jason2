@@ -1,3 +1,5 @@
+"""Command line interface for jason2."""
+
 import argparse
 import ConfigParser
 import os
@@ -6,7 +8,7 @@ import sys
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # pylint: disable=unused-import
 import numpy
 
 from jason2.bounds import Bounds

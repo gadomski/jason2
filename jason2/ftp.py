@@ -1,3 +1,4 @@
+"""Connect to and download data from the jason-2 servers."""
 import fnmatch
 import ftplib
 import os
@@ -9,6 +10,18 @@ from jason2.utils import mkdir_p, zfill3, get_cycle_range
 
 
 class FtpConnection(object):
+    """An FTP connection to the jason-2 servers.
+
+    Use it like this:
+
+        from jason2.pass_ import Pass
+        from jason2.product import PRODUCTS
+
+        pass_ = Pass(195, 33.22, 33.33)
+        with FtpConnection("me@example.com", ".", pass_) as ftp:
+            ftp.fetch_product(PRODUCTS["sgdr"])
+
+    """
 
     SERVER = "avisoftp.cnes.fr"
     ROOT_PATH = "/Niveau0/AVISO/pub/jason-2/"
@@ -28,6 +41,12 @@ class FtpConnection(object):
         self.close()
 
     def open(self):
+        """Open the FTP connection.
+
+        It is recommended to use the with-as syntax over explicitly opening
+        and closing the connection yourself.
+
+        """
         self._inform("Opening FTP connection to {} as {}...".format(self.SERVER,
                                                                     self.email))
         self.connection = ftplib.FTP(self.SERVER)
@@ -35,15 +54,27 @@ class FtpConnection(object):
         self._inform("done\n")
 
     def is_open(self):
+        """Boolean checker on connection status."""
         return self.connection is not None
 
     def close(self):
+        """Close the FTP connection.
+
+        Again, use the with-as syntax over explicit open-close.
+
+        """
         self._inform("Closing FTP connection...")
         self.connection.close()
         self.connection = None
         self._inform("done\n")
 
     def fetch_product(self, product, skip_unzipping=False, overwrite=False):
+        """Fetch all cycles for a given product.
+
+        The passes of interest are provided to the Ftp connection on
+        construction.
+
+        """
         self._assert_connected()
         for cycle in self._get_cycle_range(product):
             cycle_str = "cycle_{}".format(zfill3(cycle))
