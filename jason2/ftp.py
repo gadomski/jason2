@@ -13,8 +13,10 @@ class FtpConnection(object):
     SERVER = "avisoftp.cnes.fr"
     ROOT_PATH = "/Niveau0/AVISO/pub/jason-2/"
 
-    def __init__(self, email, output=sys.stdout):
+    def __init__(self, email, data_directory, passes, output=sys.stdout):
         self.email = email
+        self.data_directory = data_directory
+        self.passes = passes
         self.connection = None
         self.output = output
 
@@ -41,37 +43,47 @@ class FtpConnection(object):
         self.connection = None
         self._inform("done\n")
 
-    def fetch(self, product, cycle, passes, data_directory,
-              skip_unzipping=False, overwrite=False):
+    def fetch_product(self, product, skip_unzipping=False, overwrite=False):
         self._assert_connected()
-        cycle_str = "cycle_{}".format(zfill3(cycle))
-        self.connection.cwd(os.path.join(self.ROOT_PATH, product.directory_name,
-                                         cycle_str))
-        for pass_ in passes:
-            filenames = fnmatch.filter(self.connection.nlst(),
-                                       product.get_glob(cycle, pass_))
-            assert len(filenames) == 1
-            filename = filenames[0]
-            outfile = os.path.join(data_directory, product.directory_name,
-                                   cycle_str, filename)
-            if os.path.exists(outfile) and not overwrite:
-                self._inform(
-                    "{} already exists on filesystem, skipping.\n".format(
-                        filename))
-                continue
-            mkdir_p(os.path.dirname(outfile))
-            self._inform("Downloading {}...".format(filename))
-            self.connection.retrbinary("RETR {}".format(filename),
-                                       open(outfile, "wb").write)
-            self._inform("done\n")
-            if os.path.splitext(outfile)[1] == ".zip" and not skip_unzipping:
-                self._unzip(outfile)
+        for cycle in self._get_cycle_range(product):
+            cycle_str = "cycle_{}".format(zfill3(cycle))
+            self.connection.cwd(os.path.join(self.ROOT_PATH,
+                                             product.directory_name,
+                                             cycle_str))
+            for pass_ in self.passes:
+                filenames = fnmatch.filter(self.connection.nlst(),
+                                           product.get_glob(cycle, pass_))
+                if len(filenames) == 0:
+                    self._inform("WARNING: no {} product for "
+                                 "cycle {}, pass {}\n".format(
+                                     product.name, cycle, pass_.number))
+                    continue
+                if len(filenames) > 1:
+                    raise ConnectionError("Too many matching products")
+                filename = filenames[0]
+                outfile = os.path.join(self.data_directory,
+                                       product.directory_name,
+                                       cycle_str,
+                                       filename)
+                if os.path.exists(outfile) and not overwrite:
+                    self._inform(
+                        "{} already exists on filesystem, skipping.\n".format(
+                            filename))
+                    continue
+                mkdir_p(os.path.dirname(outfile))
+                self._inform("Downloading {}...".format(filename))
+                self.connection.retrbinary("RETR {}".format(filename),
+                                           open(outfile, "wb").write)
+                self._inform("done\n")
+                if (os.path.splitext(outfile)[1] == ".zip" and
+                        not skip_unzipping):
+                    self._unzip(outfile)
 
-    def get_cycle_range(self, product, start_cycle, end_cycle):
+    def _get_cycle_range(self, product):
         self._assert_connected()
         cycle_directories = self.connection.nlst(
             os.path.join(self.ROOT_PATH, product.directory_name))
-        return get_cycle_range(cycle_directories, start_cycle, end_cycle)
+        return get_cycle_range(cycle_directories)
 
     def _assert_connected(self):
         if self.connection is None:

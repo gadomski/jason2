@@ -18,7 +18,7 @@ class Product(object):
 
     def get_glob(self, cycle, pass_, unzipped_only=False):
         cycle_str = zfill3(cycle)
-        pass_str = zfill3(pass_)
+        pass_str = zfill3(pass_.number)
         extension = ".nc" if unzipped_only else self.get_extension()
         return "JA2_{}P{}_2P{}P{}_{}_*{}".format(
             self.get_family_code(), self.get_type_code(), self.version,
@@ -48,3 +48,9 @@ class Product(object):
 
     def get_extension(self):
         return ".zip" if self.zipped else ".nc"
+
+
+PRODUCTS = {
+    "gdr": Product("gdr", "native", directory_name="gdr_d"),
+    "sgdr": Product("sgdr", "sensor", directory_name="sgdr_d", zipped=True),
+}

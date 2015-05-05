@@ -1,5 +1,7 @@
 import argparse
-import csv
+import ConfigParser
+import os
+import re
 import sys
 
 import matplotlib.pyplot as plt
@@ -7,7 +9,9 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 import numpy
 
-from jason2 import products
+from jason2.bounds import Bounds
+from jason2.pass_ import Pass
+from jason2.product import PRODUCTS
 from jason2.project import Project
 from jason2.utils import str_to_list
 
@@ -17,32 +21,22 @@ def fetch(project, args):
     sys.exit(0)
 
 
-def ice_heights(project, args):
-    product = products[args.product]
-    [datetimes, heights] = \
-        project.get_ice_heights(product, args.min_latitude, args.max_latitude)
-    writer = csv.writer(sys.stdout)
-    writer.writerow(["Datetime", "Ice height"])
-    for datetime, height in zip(datetimes, heights):
-        writer.writerow([datetime, height])
-
-
 def list_products(*_):
-    for name, product in products.iteritems():
+    for name, product in PRODUCTS.iteritems():
         namestr = "Name: " + name
         print
         print namestr
         print "-" * len(namestr)
-        print " family = " + product.family
-        print "   type = " + product.type_
-        print "version = " + product.version
-        print " zipped = " + str(product.zipped)
+        print " family: " + product.family
+        print "   type: " + product.type_
+        print "version: " + product.version
+        print " zipped: " + str(product.zipped)
         print
     sys.exit(0)
 
 
 def plot_waveforms(project, args):
-    waveforms, latitudes = project.get_waveforms(args.cycle)
+    waveforms, latitudes = project.get_waveforms(args.cycle, args.pass_number)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     (nrows, ncols) = waveforms.shape
@@ -54,66 +48,32 @@ def plot_waveforms(project, args):
 
 
 def show_config(project, args):
-    if project.data_directory is None:
-        print "Invalid configuration detected, data directory is None."
-        print "Populate jason.cfg in the current working directory to " \
-              "set configuration parameters."
-        sys.exit(1)
     print
     print "Project configuration"
-    print "---------------------"
-    print "  config files: " + ", ".join(args.config_files)
+    print "-" * 79
+    print "   config file: " + args.config
     print "data directory: " + project.data_directory
     print "         email: " + project.email
     print "      products: " + ", ".join(product.name for product in
                                          project.products)
-    print "        passes: " + ", ".join(str(pass_) for pass_ in
-                                         project.passes)
-    if project.start_cycle:
-        print "   start cycle: " + str(project.start_cycle)
-    if project.end_cycle:
-        print "     end cycle: " + str(project.end_cycle)
+    for pass_ in project.passes:
+        print
+        print "Pass " + str(pass_.number)
+        print "-" * 40
+        print " min_latitude: {}".format(pass_.bounds.miny)
+        print " max_latitude: {}".format(pass_.bounds.maxy)
+        print "min_longitude: {}".format(pass_.bounds.minx)
+        print "max_longitude: {}".format(pass_.bounds.maxy)
+
     sys.exit(0)
 
 
 def parse_args():
-    config, config_files = Project.read_config()
-
     parser = argparse.ArgumentParser(description="Download and analyze "
-                                     "Jason2 data. Most command line arguments "
-                                     "can also be specified in a configuration "
-                                     "file (jason2.cfg or ~/.jason2.cfg).")
-    parser.add_argument("-d", "--data-directory",
-                        default=config.get("project", "data-directory"),
-                        help="The root directory for raw jason2 data")
-    parser.add_argument("-e", "--email",
-                        default=config.get("project", "email"),
-                        help="Email address to identify you when downloading "
-                             "data")
-    parser.add_argument("-p", "--products",
-                        default=config.get("project", "products"),
-                        help="A comma-delimted list of product names")
-    parser.add_argument("-t", "--passes",
-                        default=config.get("project", "passes"),
-                        help="A comma-delimted list of pass numbers")
-    parser.add_argument("--start-cycle", type=int,
-                        default=config.get("project", "start-cycle"),
-                        help="The first cycle to download")
-    parser.add_argument("--end-cycle", type=int,
-                        default=config.get("project", "end-cycle"),
-                        help="The last cycle to download")
-    parser.add_argument("--min-latitude", type=float,
-                        default=config.get("project", "min-latitude"),
-                        help="Minimum latitude in decimal degrees")
-    parser.add_argument("--max-latitude", type=float,
-                        default=config.get("project", "max-latitude"),
-                        help="Maximum latitude in decimal degrees")
-    parser.add_argument("--min-longitude", type=float,
-                        default=config.get("project", "min-longitude"),
-                        help="Minimum longitude in decimal degrees")
-    parser.add_argument("--max-longitude", type=float,
-                        default=config.get("project", "max-longitude"),
-                        help="Maximum longitude in decimal degrees")
+                                     "Jason2 data.")
+    parser.add_argument("--config", default="jason2.cfg",
+                        help="Path to the configuration file. Defaults to "
+                             "`jason2.cfg` in your current working directory.")
 
     subparsers = parser.add_subparsers()
 
@@ -125,14 +85,6 @@ def parse_args():
     fetch_parser.add_argument("--skip-unzipping", action="store_true",
                               help="Do not unzip sgdr files")
     fetch_parser.set_defaults(func=fetch)
-
-    ice_heights_parser = subparsers.add_parser("ice-heights",
-                                               help="Calculate the ice height "
-                                               "timeseries between two "
-                                               "latitudes")
-    ice_heights_parser.add_argument(
-        "product", help="Name of the product to use for heights")
-    ice_heights_parser.set_defaults(func=ice_heights)
 
     list_products_parser = subparsers.add_parser("list-products",
                                                  help="List supported jason2 "
@@ -148,31 +100,50 @@ def parse_args():
                                                   help="Plot sgdr waveforms.")
     plot_waveforms_parser.add_argument("cycle", type=int,
                                        help="The cycle to plot")
+    plot_waveforms_parser.add_argument("--pass", dest="pass_number", type=int,
+                                       default=None,
+                                       help="The pass number to plot. "
+                                       "Only required if your project uses "
+                                       "more than one pass.")
     plot_waveforms_parser.set_defaults(func=plot_waveforms)
 
     args = parser.parse_args()
-    args.config_files = config_files
     return args
 
 
 def main():
     args = parse_args()
-    project = Project()
-    project.data_directory = args.data_directory
-    project.email = args.email
-    if args.products is None:
-        project.products = []
-    else:
-        project.products = [products[product_name] for product_name in
-                            str_to_list(args.products)]
-    if args.passes is None:
-        project.passes = []
-    else:
-        project.passes = [int(pass_) for pass_ in str_to_list(args.passes)]
-    project.start_cycle = args.start_cycle
-    project.end_cycle = args.end_cycle
-    project.min_latitude = args.min_latitude
-    project.max_latitude = args.max_latitude
-    project.min_longitude = args.min_longitude
-    project.max_longitude = args.max_longitude
+    defaults = {
+        "min_longitude": None,
+        "max_longitude": None,
+    }
+    config = ConfigParser.ConfigParser(defaults)
+    config.read(args.config)
+    try:
+        products = [PRODUCTS[name] for name in
+                    str_to_list(config.get("project", "products"))]
+        pass_sections = [section for section in config.sections()
+                         if section.startswith("pass-")]
+        passes = []
+        for section in pass_sections:
+            match = re.match(r"pass-(\d+)", section)
+            assert match
+            bounds = Bounds(
+                miny=config.getfloat(section, "min_latitude"),
+                maxy=config.getfloat(section, "max_latitude"),
+                minx=config.getfloat(section, "min_longitude"),
+                maxx=config.getfloat(section, "max_longitude"),
+            )
+            pass_ = Pass(number=int(match.group(1)), bounds=bounds)
+            passes.append(pass_)
+
+        project = Project(
+            data_directory=config.get("project", "data_directory"),
+            email=config.get("project", "email"),
+            products=products,
+            passes=passes)
+    except ConfigParser.Error as err:
+        sys.stderr.write("Invalid configuration file: {}\n".format(
+            os.path.abspath(args.config)))
+        raise err
     args.func(project, args)
