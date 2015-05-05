@@ -24,6 +24,36 @@ Windows, your mileage my vary.
 **jason2** was developed on Python 2.7.9.
 
 
+## Common Usage
+
+What can **jason2** do for you?
+Here's one example.
+
+```bash
+$ cat > jason2.cfg
+[project]
+data_directory: build
+email: me@example.com
+products: gdr, sgdr
+
+[pass-195]
+min_latitude = 32.98
+max_latitude = 33.23
+
+$ jason2 fetch
+# ... lots of output ...
+
+$ ls build
+gdr_d  sgdr_d
+
+$ ls build/sgdr_d/cycle_000
+JA2_GPS_2PdP000_195_20080709_170712_20080709_180325.nc  JA2_GPS_2PdP000_195_20080709_170712_20080709_180325.zip
+
+$ jason2 plot-waveforms 0
+# ... 3d waveform plot of sdgr cycle 0 appears ...
+```
+
+
 ## Documentation
 
 Documentation is hosted at http://gadomski.github.io/jason2.
