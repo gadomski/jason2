@@ -53,6 +53,8 @@ $ jason2 plot-waveforms 0
 # ... 3d waveform plot of sdgr cycle 0 appears ...
 ```
 
+![An example waveform](img/example-waveform.png)
+
 
 ## Documentation
 
