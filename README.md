@@ -50,7 +50,7 @@ $ ls build/sgdr_d/cycle_000
 JA2_GPS_2PdP000_195_20080709_170712_20080709_180325.nc  JA2_GPS_2PdP000_195_20080709_170712_20080709_180325.zip
 
 $ jason2 plot-waveforms 0
-# ... 3d waveform plot of sdgr cycle 0 appears ...
+# ... 3d waveform plot of sgdr cycle 0 appears ...
 ```
 
 ![An example waveform](img/example-waveform.png)
