@@ -116,30 +116,28 @@ A <code>Project</code> has many attributes, including:</p>
 <li>a list of <code>passes</code>, which are jason-2 passes (a.k.a. tracks) that your project is interested</li>
 <li>and more...</li>
 </ul>
-<p>You can see the complete list of project parameters by running <code>jason2 --help</code> and looking at the available command line options.
-Some of these parameters must be set by you, and others will be filled with sensible defaults.</p>
 <h2 id="configuration-files">Configuration Files</h2>
-<p>While you could provide project parameters explicitly to each invocation of the command line tool, this quickly gets cumbersome.
-To make things easier, project parameters can be stored in configuration files.
-<strong>jason2</strong> looks for configuration files in two places:</p>
-<ul>
-<li>a file named <code>jason2.cfg</code> in the current working directory</li>
-<li>a file named <code>~/.jason2.cfg</code></li>
-</ul>
-<p>This allows you to specify common options (e.g. your email address for FTP fetching) in the user-wide <code>~/.jason2.cfg</code>, while specifying options specific to a given project (e.g. pass numbers) in a directory-specific file.</p>
+<p><strong>jason2</strong> looks for project configuration files in a file named <code>jason2.cfg</code> in your current working directory.
+You can specify another location for your configuration file with the <code>--config</code> command line option.</p>
 <p>A configuration file looks like this:</p>
 <pre><code class="text">[project]
-data-directory: build
+data_directory: build
 email: me@example.com
 products: gdr, sgdr
-passes: 195, 197
-end-cycle: 3
+
+[pass-195]
+min_latitude = 32.98
+max_latitude = 33.23
+min_longitude = 244.23
+max_longitude = 244.63
+
+[pass-197]
+min_latitude = 32.98
+max_latitude = 33.23
 </code></pre>
 
-<p>All options need to go in a <code>[project]</code> section.
-Lists are specified in a comma-delimited fashion.
-Omitted values (e.g. <code>start-cycle</code> in the example) are filled with sensible defaults.</p>
-<p>Project parameters provided on the command line will override the values in the configuration files.</p>
+<p>The list of products is specified in a comma-delimited fashion.
+All latitudes and longitudes are provided in decimal degrees, and the longitude values are optional.</p>
 <h2 id="command-line-usage">Command Line Usage</h2>
 <p>Like many tools, <code>jason2</code> is organized into subtools; each subtool takes a specific action or actions, or provides certain output.
 To see the top-level <code>jason2</code> help, including the list of subtools, run:</p>
