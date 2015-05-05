@@ -23,7 +23,7 @@ class Project(object):
                 ftp.fetch_product(product, skip_unzipping=skip_unzipping,
                                   overwrite=overwrite)
 
-    def get_waveforms(self, cycle, pass_number=None):
+    def get_waveforms(self, cycle, pass_number=None, clip=None):
         if PRODUCTS["sgdr"] not in self.products:
             raise Jason2Error("Can get waveforms without sgdr product")
         if len(self.passes) == 0:
@@ -37,7 +37,7 @@ class Project(object):
         else:
             pass_ = self.passes[0]
         dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
-        return dataset.get_waveforms()
+        return dataset.get_waveforms(clip)
 
     def _get_dataset(self, product, cycle, pass_):
         filename = self._get_filename(product, cycle, pass_)

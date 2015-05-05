@@ -38,7 +38,9 @@ def list_products(*_):
 
 
 def plot_waveforms(project, args):
-    waveforms, latitudes = project.get_waveforms(args.cycle, args.pass_number)
+    waveforms, latitudes = project.get_waveforms(args.cycle,
+                                                 pass_number=args.pass_number,
+                                                 clip=args.clip)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     (nrows, ncols) = waveforms.shape
@@ -107,6 +109,11 @@ def parse_args():
                                        help="The pass number to plot. "
                                        "Only required if your project uses "
                                        "more than one pass.")
+    plot_waveforms_parser.add_argument("--clip", type=float,
+                                       default=None,
+                                       help="Crop waveform intensity values so "
+                                       "very large values don't dominate the "
+                                       "plot")
     plot_waveforms_parser.set_defaults(func=plot_waveforms)
 
     args = parser.parse_args()
