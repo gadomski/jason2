@@ -1,9 +1,6 @@
 """Command line interface for jason2."""
 
 import argparse
-import ConfigParser
-import os
-import re
 import sys
 
 import matplotlib.pyplot as plt
@@ -11,11 +8,8 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D  # pylint: disable=unused-import
 import numpy
 
-from jason2.bounds import Bounds
-from jason2.pass_ import Pass
 from jason2.product import PRODUCTS
 from jason2.project import Project
-from jason2.utils import str_to_list
 
 
 def fetch(project, args):
@@ -41,15 +35,25 @@ def plot_waveforms(project, args):
     waveforms, latitudes = project.get_waveforms(args.cycle,
                                                  pass_number=args.pass_number,
                                                  clip=args.clip)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
     (nrows, ncols) = waveforms.shape
     x = numpy.arange(ncols)
     X, Y = numpy.meshgrid(x, latitudes)
-    ax.plot_surface(X, Y, waveforms, cmap=cm.coolwarm, rstride=1, cstride=1,
-                    linewidth=0)
-    plt.gca().invert_xaxis()
-    plt.show()
+    fig = plt.figure()
+    if args.raster:
+        ax = fig.add_subplot(111)
+        ax.pcolormesh(X, Y, waveforms, cmap=cm.coolwarm)
+        plt.axis([0, ncols, latitudes.min(), latitudes.max()])
+    else:
+        ax = fig.add_subplot(111, projection="3d")
+        ax.plot_surface(X, Y, waveforms, cmap=cm.coolwarm, rstride=1, cstride=1,
+                        linewidth=0)
+    if args.invertx:
+        fig.gca().invert_xaxis()
+
+    if args.save:
+        plt.savefig(args.save, dpi=args.dpi, transparent=True)
+    else:
+        plt.show()
 
 
 def show_config(project, args):
@@ -115,6 +119,15 @@ def parse_args():
                                        help="Crop waveform intensity values so "
                                        "very large values don't dominate the "
                                        "plot")
+    plot_waveforms_parser.add_argument("--invertx", action="store_true",
+                                       help="Invert the x axis")
+    plot_waveforms_parser.add_argument("--raster", action="store_true",
+                                       help="Show a raster instead of a pretty "
+                                       "3D plot")
+    plot_waveforms_parser.add_argument("--save", default=None,
+                                       help="Save that plot to the given file")
+    plot_waveforms_parser.add_argument("--dpi", default=300, type=int,
+                                       help="DPI when saving")
     plot_waveforms_parser.set_defaults(func=plot_waveforms)
 
     args = parser.parse_args()
@@ -123,39 +136,5 @@ def parse_args():
 
 def main():
     args = parse_args()
-    defaults = {
-        "min_longitude": None,
-        "max_longitude": None,
-    }
-    config = ConfigParser.ConfigParser(defaults)
-    config.read(args.config)
-    try:
-        products = [PRODUCTS[name] for name in
-                    str_to_list(config.get("project", "products"))]
-        pass_sections = [section for section in config.sections()
-                         if section.startswith("pass-")]
-        passes = []
-        for section in pass_sections:
-            match = re.match(r"pass-(\d+)", section)
-            assert match
-            minx = config.get(section, "min_longitude")
-            maxx = config.get(section, "max_longitude")
-            bounds = Bounds(
-                miny=config.getfloat(section, "min_latitude"),
-                maxy=config.getfloat(section, "max_latitude"),
-                minx=(float(minx) if minx is not None else None),
-                maxx=(float(maxx) if maxx is not None else None),
-            )
-            pass_ = Pass(number=int(match.group(1)), bounds=bounds)
-            passes.append(pass_)
-
-        project = Project(
-            data_directory=config.get("project", "data_directory"),
-            email=config.get("project", "email"),
-            products=products,
-            passes=passes)
-    except ConfigParser.Error as err:
-        sys.stderr.write("Invalid configuration file: {}\n".format(
-            os.path.abspath(args.config)))
-        raise err
+    project = Project.from_config(args.config)
     args.func(project, args)

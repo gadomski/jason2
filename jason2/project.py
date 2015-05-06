@@ -1,15 +1,58 @@
+import ConfigParser
 import glob
 import os
+import re
+import sys
 
+from jason2.bounds import Bounds
 from jason2.dataset import Dataset
 from jason2.exceptions import Jason2Error
 from jason2.ftp import FtpConnection
+from jason2.pass_ import Pass
 from jason2.product import PRODUCTS
-from jason2.utils import zfill3
+from jason2.utils import zfill3, str_to_list
 
 
 class Project(object):
     """Holds project configuration parameters, such as data directory."""
+
+    @classmethod
+    def from_config(cls, filename):
+        defaults = {
+            "min_longitude": None,
+            "max_longitude": None,
+        }
+        config = ConfigParser.ConfigParser(defaults)
+        config.read(filename)
+        try:
+            products = [PRODUCTS[name] for name in
+                        str_to_list(config.get("project", "products"))]
+            pass_sections = [section for section in config.sections()
+                             if section.startswith("pass-")]
+            passes = []
+            for section in pass_sections:
+                match = re.match(r"pass-(\d+)", section)
+                assert match
+                minx = config.get(section, "min_longitude")
+                maxx = config.get(section, "max_longitude")
+                bounds = Bounds(
+                    miny=config.getfloat(section, "min_latitude"),
+                    maxy=config.getfloat(section, "max_latitude"),
+                    minx=(float(minx) if minx is not None else None),
+                    maxx=(float(maxx) if maxx is not None else None),
+                )
+                pass_ = Pass(number=int(match.group(1)), bounds=bounds)
+                passes.append(pass_)
+
+            return cls(
+                data_directory=config.get("project", "data_directory"),
+                email=config.get("project", "email"),
+                products=products,
+                passes=passes)
+        except ConfigParser.Error as err:
+            sys.stderr.write("Invalid configuration file: {}\n".format(
+                os.path.abspath(filename)))
+            raise err
 
     def __init__(self, data_directory, email, products, passes):
         self.data_directory = data_directory

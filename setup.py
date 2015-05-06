@@ -32,7 +32,7 @@ setup(
 
     keywords="jason2 altimitry",
     packages=find_packages(),
-    install_requires=["matplotlib", "netCDF4", "numpy", "argparse_config"],
+    install_requires=["matplotlib", "netCDF4", "numpy"],
 
     entry_points={
         "console_scripts": [
