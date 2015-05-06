@@ -48,6 +48,7 @@ def plot_waveforms(project, args):
     X, Y = numpy.meshgrid(x, latitudes)
     ax.plot_surface(X, Y, waveforms, cmap=cm.coolwarm, rstride=1, cstride=1,
                     linewidth=0)
+    plt.gca().invert_xaxis()
     plt.show()
 
 
@@ -137,11 +138,13 @@ def main():
         for section in pass_sections:
             match = re.match(r"pass-(\d+)", section)
             assert match
+            minx = config.get(section, "min_longitude")
+            maxx = config.get(section, "max_longitude")
             bounds = Bounds(
                 miny=config.getfloat(section, "min_latitude"),
                 maxy=config.getfloat(section, "max_latitude"),
-                minx=config.getfloat(section, "min_longitude"),
-                maxx=config.getfloat(section, "max_longitude"),
+                minx=(float(minx) if minx is not None else None),
+                maxx=(float(maxx) if maxx is not None else None),
             )
             pass_ = Pass(number=int(match.group(1)), bounds=bounds)
             passes.append(pass_)
