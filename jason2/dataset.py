@@ -44,18 +44,22 @@ class Dataset(object):
         """Ocean height"""
         return self._get_height("range_20hz_ku")
 
+    def get_mle3_height(self):
+        """MLE3"""
+        return self._get_height("range_20hz_ku_mle3")
+
     def get_ice_height(self):
         """Ice height"""
         return self._get_height("ice_range_20hz_ku")
 
-    def get_height(self, range_name):
+    def _get_height(self, range_name):
         correction = self._get_20hz_correction()
         mask20hz = self._get_20hz_mask()
         return Heights(
             (self.variables["alt_20hz"] -
              correction -
              self.variables[range_name][:])[mask20hz].flatten(),
-            self.variables["lat_20hz"][mask20hz].flatten(),
+            self.variables["lat_20hz"][:][mask20hz].flatten(),
         )
 
     def _get_1hz_mask(self):
