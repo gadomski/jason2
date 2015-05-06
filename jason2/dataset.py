@@ -7,6 +7,7 @@ import numpy
 
 
 Waveforms = namedtuple("Waveforms", ["data", "latitudes"])
+Heights = namedtuple("Heights", ["data", "latitudes"])
 
 
 class Dataset(object):
@@ -50,11 +51,12 @@ class Dataset(object):
     def get_height(self, range_name):
         correction = self._get_20hz_correction()
         mask20hz = self._get_20hz_mask()
-        return (
-            self.variables["alt_20hz"] -
-            correction -
-            self.variables[range_name][:]
-        )[mask20hz].flatten()
+        return Heights(
+            (self.variables["alt_20hz"] -
+             correction -
+             self.variables[range_name][:])[mask20hz].flatten(),
+            self.variables["lat_20hz"][mask20hz].flatten(),
+        )
 
     def _get_1hz_mask(self):
         return numpy.any(self._get_20hz_mask(), 1)
