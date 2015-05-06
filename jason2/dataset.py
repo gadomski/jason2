@@ -40,23 +40,12 @@ class Dataset(object):
                          self.variables["lat_20hz"][:].flatten()[mask20hz])
 
     def get_sea_surface_height(self):
-        """Ocean height
-
-        range + wet troposphere + dry troposphere + ionosphere + sea state bias
-
-        """
-        correction = (
-            self.variables["model_dry_tropo_corr"][:] +
-            self.variables["model_wet_tropo_corr"][:] +
-            self.variables["iono_corr_gim_ku"][:] +
-            self.variables["solid_earth_tide"][:] +
-            self.variables["pole_tide"][:]
-        )
-        correction.shape = (len(correction), 1)
+        """Ocean height"""
+        correction = self._get_20hz_correction()
         mask20hz = self._get_20hz_mask()
         return (
             self.variables["alt_20hz"] -
-            numpy.tile(correction, (1, 20)) -
+            correction -
             self.variables["range_20hz_ku"][:]
         )[mask20hz].flatten()
 
@@ -79,3 +68,14 @@ class Dataset(object):
                 self.variables["lon_20hz"][:] <=
                 self.bounds.maxx)
         return mask
+
+    def _get_20hz_correction(self):
+        correction = (
+            self.variables["model_dry_tropo_corr"][:] +
+            self.variables["model_wet_tropo_corr"][:] +
+            self.variables["iono_corr_gim_ku"][:] +
+            self.variables["solid_earth_tide"][:] +
+            self.variables["pole_tide"][:]
+        )
+        correction.shape = (len(correction), 1)
+        return numpy.tile(correction, (1, 20))
