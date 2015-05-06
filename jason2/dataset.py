@@ -1,7 +1,12 @@
 """Working with netCDF4 data."""
 
+from collections import namedtuple
+
 import netCDF4
 import numpy
+
+
+Waveforms = namedtuple("Waveforms", ["data", "latitudes"])
 
 
 class Dataset(object):
@@ -24,29 +29,53 @@ class Dataset(object):
         waveform data to extract.
 
         """
-        mask20hz = self._get_20hz_mask()
+        mask20hz = self._get_20hz_mask().flatten()
         waveforms = self.variables["waveforms_20hz_ku"][:]
         waveforms.shape = (waveforms.shape[0] * waveforms.shape[1],
                            waveforms.shape[2])
         waveforms = waveforms[mask20hz, :]
         if clip is not None:
-            waveforms = numpy.clip(waveforms, 0, clip)
-        return waveforms, \
-            self.variables["lat_20hz"][:].flatten()[mask20hz]
+            waveforms = waveforms.masked_outside(0, clip)
+        return Waveforms(waveforms,
+                         self.variables["lat_20hz"][:].flatten()[mask20hz])
+
+    def get_sea_surface_height(self):
+        """Ocean height
+
+        range + wet troposphere + dry troposphere + ionosphere + sea state bias
+
+        """
+        correction = (
+            self.variables["model_dry_tropo_corr"][:] +
+            self.variables["model_wet_tropo_corr"][:] +
+            self.variables["iono_corr_gim_ku"][:] +
+            self.variables["solid_earth_tide"][:] +
+            self.variables["pole_tide"][:]
+        )
+        correction.shape = (len(correction), 1)
+        mask20hz = self._get_20hz_mask()
+        return (
+            self.variables["alt_20hz"] -
+            numpy.tile(correction, (1, 20)) -
+            self.variables["range_20hz_ku"][:]
+        )[mask20hz].flatten()
+
+    def _get_1hz_mask(self):
+        return numpy.any(self._get_20hz_mask(), 1)
 
     def _get_20hz_mask(self):
         """Get a location mask for 20hz data."""
         mask = numpy.logical_and(
-            self.variables["lat_20hz"][:].flatten() >= self.bounds.miny,
-            self.variables["lat_20hz"][:].flatten() <= self.bounds.maxy)
+            self.variables["lat_20hz"][:] >= self.bounds.miny,
+            self.variables["lat_20hz"][:] <= self.bounds.maxy)
         if self.bounds.minx is not None:
             mask = numpy.logical_and(
                 mask,
-                self.variables["lon_20hz"][:].flatten() >=
+                self.variables["lon_20hz"][:] >=
                 self.bounds.minx)
         if self.bounds.maxx is not None:
             mask = numpy.logical_and(
                 mask,
-                self.variables["lon_20hz"][:].flatten() <=
+                self.variables["lon_20hz"][:] <=
                 self.bounds.maxx)
         return mask

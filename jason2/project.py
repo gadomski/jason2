@@ -82,6 +82,11 @@ class Project(object):
         dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
         return dataset.get_waveforms(clip)
 
+    def get_dataset(self, product_name, cycle, pass_number):
+        return self._get_dataset(PRODUCTS[product_name],
+                                 cycle,
+                                 self._get_pass_by_number(pass_number))
+
     def _get_dataset(self, product, cycle, pass_):
         filename = self._get_filename(product, cycle, pass_)
         return Dataset(filename, pass_.bounds)
