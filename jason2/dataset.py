@@ -1,13 +1,15 @@
 """Working with netCDF4 data."""
 
 from collections import namedtuple
+import datetime
 
 import netCDF4
 import numpy
 
 
 Waveforms = namedtuple("Waveforms", ["data", "latitudes"])
-Heights = namedtuple("Heights", ["data", "latitudes"])
+Height = namedtuple("Height", ["data", "latitudes"])
+Heights = namedtuple("Heights", ["data", "datetime"])
 
 
 class Dataset(object):
@@ -36,9 +38,19 @@ class Dataset(object):
                            waveforms.shape[2])
         waveforms = waveforms[mask20hz, :]
         if clip is not None:
-            waveforms = waveforms.masked_outside(0, clip)
+            waveforms = numpy.clip(waveforms, 0, clip)
         return Waveforms(waveforms,
                          self.variables["lat_20hz"][:].flatten()[mask20hz])
+
+    def get_heights(self):
+        data = {
+            "ocean": self._get_height("range_20hz_ku"),
+            "mle3": self._get_height("range_20hz_ku_mle3"),
+            "ice": self._get_height("ice_range_20hz_ku"),
+        }
+        datetime = self._jason2time_to_datetime(
+            numpy.median(self.variables["time"][:][self._get_1hz_mask()]))
+        return Heights(data, datetime)
 
     def get_sea_surface_height(self):
         """Ocean height"""
@@ -55,12 +67,16 @@ class Dataset(object):
     def _get_height(self, range_name):
         correction = self._get_20hz_correction()
         mask20hz = self._get_20hz_mask()
-        return Heights(
+        return Height(
             (self.variables["alt_20hz"] -
              correction -
              self.variables[range_name][:])[mask20hz].flatten(),
             self.variables["lat_20hz"][:][mask20hz].flatten(),
         )
+
+    def _jason2time_to_datetime(self, jason2time):
+        return datetime.datetime(2000, 1, 1, 0, 0, 0) + \
+            datetime.timedelta(seconds=jason2time)
 
     def _get_1hz_mask(self):
         return numpy.any(self._get_20hz_mask(), 1)
