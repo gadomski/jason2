@@ -8,7 +8,7 @@ import numpy
 
 
 Waveforms = namedtuple("Waveforms", ["data", "latitudes"])
-Height = namedtuple("Height", ["data", "latitudes"])
+Height = namedtuple("Height", ["data", "average", "latitudes"])
 Heights = namedtuple("Heights", ["data", "datetime"])
 
 
@@ -67,12 +67,11 @@ class Dataset(object):
     def _get_height(self, range_name):
         correction = self._get_20hz_correction()
         mask20hz = self._get_20hz_mask()
-        return Height(
-            (self.variables["alt_20hz"] -
-             correction -
-             self.variables[range_name][:])[mask20hz].flatten(),
-            self.variables["lat_20hz"][:][mask20hz].flatten(),
-        )
+        data = (self.variables["alt_20hz"] -
+                correction -
+                self.variables[range_name][:])[mask20hz].flatten()
+        return Height(data, numpy.mean(data),
+                      self.variables["lat_20hz"][:][mask20hz].flatten())
 
     def _jason2time_to_datetime(self, jason2time):
         return datetime.datetime(2000, 1, 1, 0, 0, 0) + \
