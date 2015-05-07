@@ -87,9 +87,10 @@ class Project(object):
                                  cycle,
                                  self._get_pass_by_number(pass_number))
 
-    def get_heights(self, product_name, pass_number):
+    def get_heights(self, product_name, pass_number, stddev_threshold=None):
         return self._get_heights(PRODUCTS[product_name],
-                                 self._get_pass_by_number(pass_number))
+                                 self._get_pass_by_number(pass_number),
+                                 stddev_threshold)
 
     def _get_dataset(self, product, cycle, pass_):
         filename = self._get_filename(product, cycle, pass_)
@@ -105,7 +106,7 @@ class Project(object):
         else:
             raise FileNotFound("Could not find one data file")
 
-    def _get_heights(self, product, pass_):
+    def _get_heights(self, product, pass_, stddev_threshold):
         dirname = os.path.join(self.data_directory, product.directory_name)
         heights = []
         for cycle in get_cycle_range(os.listdir(dirname)):
@@ -114,7 +115,16 @@ class Project(object):
             except FileNotFound:
                 continue
             heights.append(dataset.get_heights())
+        if stddev_threshold:
+            heights = [h for h in heights
+                       if not self._exceed_threshold(h, stddev_threshold)]
         return heights
+
+    def _exceed_threshold(self, heights, threshold):
+        for value in heights.data.values():
+            if value.stddev > threshold:
+                return True
+        return False
 
     def _get_pass_by_number(self, number):
         return next(pass_ for pass_ in self.passes if pass_.number == number)
