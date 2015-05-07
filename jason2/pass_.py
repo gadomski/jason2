@@ -1,3 +1,5 @@
-from collections import namedtuple
+class Pass(object):
 
-Pass = namedtuple("Pass", ["number", "bounds"])
+    def __init__(self, number, bounds):
+        self.number = number
+        self.bounds = bounds

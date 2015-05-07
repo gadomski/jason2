@@ -2,4 +2,11 @@
 
 from collections import namedtuple
 
-Bounds = namedtuple("Bounds", ["minx", "miny", "maxx", "maxy"])
+
+class Bounds(object):
+
+    def __init__(self, miny, maxy, minx=None, maxx=None):
+        self.miny = miny
+        self.minx = minx
+        self.maxy = maxy
+        self.maxx = maxx

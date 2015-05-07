@@ -6,11 +6,11 @@ import sys
 
 from jason2.bounds import Bounds
 from jason2.dataset import Dataset
-from jason2.exceptions import Jason2Error
+from jason2.exceptions import Jason2Error, FileNotFound
 from jason2.ftp import FtpConnection
 from jason2.pass_ import Pass
 from jason2.product import PRODUCTS
-from jason2.utils import zfill3, str_to_list
+from jason2.utils import zfill3, str_to_list, get_cycle_range
 
 
 class Project(object):
@@ -87,6 +87,10 @@ class Project(object):
                                  cycle,
                                  self._get_pass_by_number(pass_number))
 
+    def get_heights(self, product_name, pass_number):
+        return self._get_heights(PRODUCTS[product_name],
+                                 self._get_pass_by_number(pass_number))
+
     def _get_dataset(self, product, cycle, pass_):
         filename = self._get_filename(product, cycle, pass_)
         return Dataset(filename, pass_.bounds)
@@ -96,8 +100,21 @@ class Project(object):
                          "cycle_{}".format(zfill3(cycle)),
                          product.get_glob(cycle, pass_, unzipped_only=True))
         files = glob.glob(g)
-        assert len(files) == 1
-        return files[0]
+        if len(files) == 1:
+            return files[0]
+        else:
+            raise FileNotFound("Could not find one data file")
+
+    def _get_heights(self, product, pass_):
+        dirname = os.path.join(self.data_directory, product.directory_name)
+        heights = []
+        for cycle in get_cycle_range(os.listdir(dirname)):
+            try:
+                dataset = self._get_dataset(product, cycle, pass_)
+            except FileNotFound:
+                continue
+            heights.append(dataset.get_heights())
+        return heights
 
     def _get_pass_by_number(self, number):
         return next(pass_ for pass_ in self.passes if pass_.number == number)
