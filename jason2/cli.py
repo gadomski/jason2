@@ -57,7 +57,7 @@ def plot_waveforms(project, args):
 
 
 def plot_cycle(project, args):
-    heights = project.get_cycle_heights(args.cycle, args.pass_number)
+    heights = project.get_one_cycle(args.cycle, args.pass_number)
     plt.plot(heights.data["ocean"].latitudes,
              heights.data["ocean"].data, "bo", label="Ocean")
     plt.plot(heights.data["ice"].latitudes,
