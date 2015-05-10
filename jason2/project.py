@@ -92,6 +92,20 @@ class Project(object):
                                  self._get_pass_by_number(pass_number),
                                  stddev_threshold)
 
+    def get_cycle_heights(self, cycle, pass_number=None):
+        if len(self.passes) == 0:
+            raise Jason2Error("No passes configured for project")
+        if len(self.passes) > 1:
+            if pass_number is None:
+                raise Jason2Error("Must provide pass if project has more than "
+                                  "one pass")
+            else:
+                pass_ = self.get_pass_by_number(pass_number)
+        else:
+            pass_ = self.passes[0]
+        dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
+        return dataset.get_heights()
+
     def _get_dataset(self, product, cycle, pass_):
         filename = self._get_filename(product, cycle, pass_)
         return Dataset(filename, pass_.bounds)

@@ -49,6 +49,7 @@ class Dataset(object):
             "ocean": self._get_height("range_20hz_ku"),
             "mle3": self._get_height("range_20hz_ku_mle3"),
             "ice": self._get_height("ice_range_20hz_ku"),
+            "threshold_50": self.get_threshold_height(0.50),
         }
         datetime = self._jason2time_to_datetime(
             numpy.median(self.variables["time"][:][self._get_1hz_mask()]))
@@ -66,31 +67,34 @@ class Dataset(object):
         """Ice height"""
         return self._get_height("ice_range_20hz_ku")
 
-    def get_threshold_height(self):
+    def get_threshold_height(self, threshold_level):
         """Height from a threshold retracker."""
         waveforms = self.get_waveforms()
-        ocean = self.get_sea_surface_height()
+        mle3 = self.get_mle3_height()
         retracked = numpy.empty(len(waveforms.data))
         retracked[:] = numpy.NAN
         for i, row in enumerate(waveforms.data):
             rowmax = numpy.max(row)
             dc = numpy.mean(row)
-            threshold = dc + 0.5 * (rowmax - dc)
+            threshold = dc + threshold_level * (rowmax - dc)
             binnumber = None
-            for i, value in enumerate(row[1:]):
+            for j, value in enumerate(row[1:]):
                 if value >= threshold:
-                    if value - row[i-1] == 0:
-                        binnumber = i - 1
+                    if value - row[j-1] == 0:
+                        binnumber = j - 1
                     else:
-                        binnumber = (i - 1) + ((threshold - row[i-1]) /
-                                               (value - row[i-1]))
+                        binnumber = (j - 1) + ((threshold - row[j-1]) /
+                                               (value - row[j-1]))
                     break
             if binnumber is None:
                 retracked[i] = numpy.NAN
             else:
-                retracked[i] = ocean.data[i] - \
+                retracked[i] = mle3.data[i] - \
                     (32 - binnumber + 1) * self.GATE_2_METERS
-        return retracked
+        latitudes = self.variables[
+            "lat_20hz"][:][self._get_20hz_mask()].flatten()
+        return Height(retracked, numpy.mean(retracked),
+                      numpy.std(retracked), latitudes)
 
     def _get_height(self, range_name):
         correction = self._get_20hz_correction()

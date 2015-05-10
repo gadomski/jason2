@@ -56,6 +56,21 @@ def plot_waveforms(project, args):
         plt.show()
 
 
+def plot_cycle(project, args):
+    heights = project.get_cycle_heights(args.cycle, args.pass_number)
+    plt.plot(heights.data["ocean"].latitudes,
+             heights.data["ocean"].data, "bo", label="Ocean")
+    plt.plot(heights.data["ice"].latitudes,
+             heights.data["ice"].data, "c^", label="Ice")
+    plt.plot(heights.data["threshold_50"].latitudes,
+             heights.data["threshold_50"].data, "g+", label="Threshold 50%")
+    plt.title("Altimeter ellipsoidal heights for cycle {}".format(args.cycle))
+    plt.xlabel("Latitude")
+    plt.ylabel("Ellipsoidal height(m)")
+    plt.legend()
+    plt.show()
+
+
 def show_config(project, args):
     print
     print "Project configuration"
@@ -129,6 +144,18 @@ def parse_args():
     plot_waveforms_parser.add_argument("--dpi", default=300, type=int,
                                        help="DPI when saving")
     plot_waveforms_parser.set_defaults(func=plot_waveforms)
+
+    plot_cycle_parser = subparsers.add_parser("plot-cycle",
+                                              help="Plot range values for a "
+                                              "single cycle")
+    plot_cycle_parser.add_argument("cycle", type=int,
+                                   help="The cycle to plot")
+    plot_cycle_parser.add_argument("--pass", dest="pass_number", type=int,
+                                   default=None,
+                                   help="The pass number to plot. "
+                                   "Only required if your project uses "
+                                   "more than one pass.")
+    plot_cycle_parser.set_defaults(func=plot_cycle)
 
     args = parser.parse_args()
     return args
