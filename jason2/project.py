@@ -67,18 +67,7 @@ class Project(object):
                                   overwrite=overwrite)
 
     def get_waveforms(self, cycle, pass_number=None, clip=None):
-        if PRODUCTS["sgdr"] not in self.products:
-            raise Jason2Error("Can get waveforms without sgdr product")
-        if len(self.passes) == 0:
-            raise Jason2Error("No passes configured for project")
-        if len(self.passes) > 1:
-            if pass_number is None:
-                raise Jason2Error("Must provide pass if project has more than "
-                                  "one pass")
-            else:
-                pass_ = self.get_pass_by_number(pass_number)
-        else:
-            pass_ = self.passes[0]
+        pass_ = self._get_single_pass(pass_number)
         dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
         return dataset.get_waveforms(clip)
 
@@ -87,12 +76,25 @@ class Project(object):
                                  cycle,
                                  self._get_pass_by_number(pass_number))
 
-    def get_heights(self, product_name, pass_number, stddev_threshold=None):
-        return self._get_heights(PRODUCTS[product_name],
-                                 self._get_pass_by_number(pass_number),
-                                 stddev_threshold)
+    def get_all_heights(self, product_name, pass_number):
+        pass_ = self._get_pass_by_number(pass_number)
+        product = PRODUCTS["sgdr"]
+        dirname = os.path.join(self.data_directory, product.directory_name)
+        heights = []
+        for cycle in get_cycle_range(os.listdir(dirname)):
+            try:
+                dataset = self._get_dataset(product, cycle, pass_)
+            except FileNotFound:
+                continue
+            heights.append(dataset.get_heights())
+        return heights
 
-    def get_cycle_heights(self, cycle, pass_number=None):
+    def get_one_cycle(self, cycle, pass_number=None):
+        pass_ = self._get_single_pass(pass_number)
+        dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
+        return dataset.get_heights()
+
+    def _get_single_pass(self, pass_number):
         if len(self.passes) == 0:
             raise Jason2Error("No passes configured for project")
         if len(self.passes) > 1:
@@ -100,11 +102,9 @@ class Project(object):
                 raise Jason2Error("Must provide pass if project has more than "
                                   "one pass")
             else:
-                pass_ = self.get_pass_by_number(pass_number)
+                return self.get_pass_by_number(pass_number)
         else:
-            pass_ = self.passes[0]
-        dataset = self._get_dataset(PRODUCTS["sgdr"], cycle, pass_)
-        return dataset.get_heights()
+            return self.passes[0]
 
     def _get_dataset(self, product, cycle, pass_):
         filename = self._get_filename(product, cycle, pass_)
@@ -119,26 +119,6 @@ class Project(object):
             return files[0]
         else:
             raise FileNotFound("Could not find one data file")
-
-    def _get_heights(self, product, pass_, stddev_threshold):
-        dirname = os.path.join(self.data_directory, product.directory_name)
-        heights = []
-        for cycle in get_cycle_range(os.listdir(dirname)):
-            try:
-                dataset = self._get_dataset(product, cycle, pass_)
-            except FileNotFound:
-                continue
-            heights.append(dataset.get_heights())
-        if stddev_threshold:
-            heights = [h for h in heights
-                       if not self._exceed_threshold(h, stddev_threshold)]
-        return heights
-
-    def _exceed_threshold(self, heights, threshold):
-        for value in heights.data.values():
-            if value.stddev > threshold:
-                return True
-        return False
 
     def _get_pass_by_number(self, number):
         return next(pass_ for pass_ in self.passes if pass_.number == number)
