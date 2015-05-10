@@ -87,7 +87,7 @@ def show_config(project, args):
         print " min_latitude: {}".format(pass_.bounds.miny)
         print " max_latitude: {}".format(pass_.bounds.maxy)
         print "min_longitude: {}".format(pass_.bounds.minx)
-        print "max_longitude: {}".format(pass_.bounds.maxy)
+        print "max_longitude: {}".format(pass_.bounds.maxx)
 
     sys.exit(0)
 
