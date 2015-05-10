@@ -64,8 +64,25 @@ def plot_cycle(project, args):
              heights.data["ice"].data, "c^", label="Ice")
     plt.plot(heights.data["threshold_50"].latitudes,
              heights.data["threshold_50"].data, "g+", label="Threshold 50%")
+    plt.plot(heights.data["threshold_20"].latitudes,
+             heights.data["threshold_20"].data, "r+", label="Threshold 20%")
     plt.title("Altimeter ellipsoidal heights for cycle {}".format(args.cycle))
     plt.xlabel("Latitude")
+    plt.ylabel("Ellipsoidal height(m)")
+    plt.legend()
+    plt.show()
+
+
+def plot_heights(project, args):
+    heights = project.get_all_heights(args.pass_number)
+    datetimes = [h["datetime"] for h in heights]
+    plt.plot(datetimes, [h["ocean"] for h in heights], "bo", label="Ocean")
+    plt.plot(datetimes, [h["ice"] for h in heights], "c^", label="Ice")
+    plt.plot(datetimes, [h["threshold_50"] for h in heights], "g+",
+             label="Threshold 50%")
+    plt.plot(datetimes, [h["threshold_20"] for h in heights], "r+",
+             label="Threshold 20%")
+    plt.xlabel("Date")
     plt.ylabel("Ellipsoidal height(m)")
     plt.legend()
     plt.show()
@@ -156,6 +173,15 @@ def parse_args():
                                    "Only required if your project uses "
                                    "more than one pass.")
     plot_cycle_parser.set_defaults(func=plot_cycle)
+
+    plot_heights_parser = subparsers.add_parser("plot-heights",
+                                                help="Plot height values")
+    plot_heights_parser.add_argument("--pass", dest="pass_number", type=int,
+                                     default=None,
+                                     help="The pass number to plot. "
+                                     "Only required if your project uses "
+                                     "more than one pass.")
+    plot_heights_parser.set_defaults(func=plot_heights)
 
     args = parser.parse_args()
     return args

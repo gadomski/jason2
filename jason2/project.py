@@ -76,8 +76,8 @@ class Project(object):
                                  cycle,
                                  self._get_pass_by_number(pass_number))
 
-    def get_all_heights(self, product_name, pass_number):
-        pass_ = self._get_pass_by_number(pass_number)
+    def get_all_heights(self, pass_number=None):
+        pass_ = self._get_single_pass(pass_number)
         product = PRODUCTS["sgdr"]
         dirname = os.path.join(self.data_directory, product.directory_name)
         heights = []
@@ -86,7 +86,11 @@ class Project(object):
                 dataset = self._get_dataset(product, cycle, pass_)
             except FileNotFound:
                 continue
-            heights.append(dataset.get_heights())
+            all_heights = dataset.get_heights()
+            h = {"datetime": all_heights.datetime}
+            for name, value in all_heights.data.iteritems():
+                h[name] = value.average
+            heights.append(h)
         return heights
 
     def get_one_cycle(self, cycle, pass_number=None):

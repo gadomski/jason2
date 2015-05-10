@@ -50,6 +50,7 @@ class Dataset(object):
             "mle3": self._get_height("range_20hz_ku_mle3"),
             "ice": self._get_height("ice_range_20hz_ku"),
             "threshold_50": self.get_threshold_height(0.50),
+            "threshold_20": self.get_threshold_height(0.20),
         }
         datetime = self._jason2time_to_datetime(
             numpy.median(self.variables["time"][:][self._get_1hz_mask()]))
