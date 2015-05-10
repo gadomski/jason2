@@ -20,6 +20,8 @@ class Dataset(object):
 
     """
 
+    GATE_2_METERS = 0.4684375
+
     def __init__(self, filename, bounds):
         self.data = netCDF4.Dataset(filename)
         self.variables = self.data.variables
@@ -63,6 +65,32 @@ class Dataset(object):
     def get_ice_height(self):
         """Ice height"""
         return self._get_height("ice_range_20hz_ku")
+
+    def get_threshold_height(self):
+        """Height from a threshold retracker."""
+        waveforms = self.get_waveforms()
+        ocean = self.get_sea_surface_height()
+        retracked = numpy.empty(len(waveforms.data))
+        retracked[:] = numpy.NAN
+        for i, row in enumerate(waveforms.data):
+            rowmax = numpy.max(row)
+            dc = numpy.mean(row)
+            threshold = dc + 0.5 * (rowmax - dc)
+            binnumber = None
+            for i, value in enumerate(row[1:]):
+                if value >= threshold:
+                    if value - row[i-1] == 0:
+                        binnumber = i - 1
+                    else:
+                        binnumber = (i - 1) + ((threshold - row[i-1]) /
+                                               (value - row[i-1]))
+                    break
+            if binnumber is None:
+                retracked[i] = numpy.NAN
+            else:
+                retracked[i] = ocean.data[i] - \
+                    (32 - binnumber + 1) * self.GATE_2_METERS
+        return retracked
 
     def _get_height(self, range_name):
         correction = self._get_20hz_correction()
