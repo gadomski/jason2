@@ -80,17 +80,21 @@ class Project(object):
         pass_ = self._get_single_pass(pass_number)
         product = PRODUCTS["sgdr"]
         dirname = os.path.join(self.data_directory, product.directory_name)
-        heights = []
+        heights = {}
         for cycle in get_cycle_range(os.listdir(dirname)):
             try:
                 dataset = self._get_dataset(product, cycle, pass_)
             except FileNotFound:
                 continue
             all_heights = dataset.get_heights()
-            h = {"datetime": all_heights.datetime}
             for name, value in all_heights.data.iteritems():
-                h[name] = value.average
-            heights.append(h)
+                data = heights.setdefault(name, [])
+                data.append({
+                    "value": value.average,
+                    "count": len(value.data),
+                    "stddev": value.stddev,
+                    "datetime": all_heights.datetime,
+                })
         return heights
 
     def get_one_cycle(self, cycle, pass_number=None):

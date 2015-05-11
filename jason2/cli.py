@@ -64,8 +64,6 @@ def plot_cycle(project, args):
              heights.data["ice"].data, "c^", label="Ice")
     plt.plot(heights.data["threshold_50"].latitudes,
              heights.data["threshold_50"].data, "g+", label="Threshold 50%")
-    plt.plot(heights.data["threshold_20"].latitudes,
-             heights.data["threshold_20"].data, "r+", label="Threshold 20%")
     plt.title("Altimeter ellipsoidal heights for cycle {}".format(args.cycle))
     plt.xlabel("Latitude")
     plt.ylabel("Ellipsoidal height(m)")
@@ -75,15 +73,30 @@ def plot_cycle(project, args):
 
 def plot_heights(project, args):
     heights = project.get_all_heights(args.pass_number)
-    datetimes = [h["datetime"] for h in heights]
-    plt.plot(datetimes, [h["ocean"] for h in heights], "bo", label="Ocean")
-    plt.plot(datetimes, [h["ice"] for h in heights], "c^", label="Ice")
-    plt.plot(datetimes, [h["threshold_50"] for h in heights], "g+",
-             label="Threshold 50%")
-    plt.plot(datetimes, [h["threshold_20"] for h in heights], "r+",
-             label="Threshold 20%")
+
+    def _clean(data):
+        data = [d for d in data if d["stddev"] < 0.1]
+        mean = numpy.mean([d["value"] for d in data])
+        stddev = numpy.std([d["value"] for d in data])
+        data = [d for d in data if abs(d["value"] - mean) < stddev]
+        mean = numpy.mean([d["value"] for d in data])
+        return [{
+            "value": d["value"] - mean,
+            "datetime": d["datetime"],
+        } for d in data]
+
+    ocean = _clean(heights["ocean"])
+    ice = _clean(heights["ice"])
+    threshold_50 = _clean(heights["threshold_50"])
+
+    plt.plot([d["datetime"] for d in ocean],
+             [d["value"] for d in ocean], "bo", label="Ocean")
+    plt.plot([d["datetime"] for d in ice],
+             [d["value"] for d in ice], "c^", label="Ice")
+    plt.plot([d["datetime"] for d in threshold_50],
+             [d["value"] for d in threshold_50], "g+", label="Threshold 50%")
     plt.xlabel("Date")
-    plt.ylabel("Ellipsoidal height(m)")
+    plt.ylabel("Height deviation from mean w.r.t. Jason-2 ellipsoid (m)")
     plt.legend()
     plt.show()
 
